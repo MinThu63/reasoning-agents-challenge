@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "reasoning-agents-starter"
+version = "0.1.0"
+description = "Synthetic-data starter for the Microsoft Foundry Reasoning Agents challenge"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "python-dotenv>=1.0.1",
+  "pydantic>=2.7.0",
+  "azure-ai-projects>=1.0.0b10",
+  "azure-identity>=1.17.1",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

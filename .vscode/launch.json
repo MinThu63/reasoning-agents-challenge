@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Reasoning Agents Starter",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "reasoning_agents_starter",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}\\.env"
+    }
+  ]
+}
