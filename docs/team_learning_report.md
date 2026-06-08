@@ -1,8 +1,0 @@
-# Quarterly Learning Performance Summary (Synthetic)
-
-Average study time: 21 hours
-Pass rate: 68%
-
-Observation:
-
-- Learners with more than 20 study hours and more than 75% on practice scores show stronger certification outcomes.

@@ -4,5 +4,6 @@
   "editor.formatOnSave": true,
   "files.exclude": {
     "**/__pycache__": true
-  }
+  },
+  "postman.settings.dotenv-detection-notification-visibility": false
 }

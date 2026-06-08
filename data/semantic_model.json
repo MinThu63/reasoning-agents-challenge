@@ -1,0 +1,254 @@
+{
+  "organization": "Synthetic Enterprise Corp",
+  "model_version": "1.0.0",
+  "disclaimer": "This is entirely synthetic data for demonstration purposes only.",
+
+  "roles": [
+    {
+      "role_id": "ROLE-CE",
+      "title": "Cloud Engineer",
+      "team_assignments": ["TEAM-A", "TEAM-D"],
+      "primary_certifications": ["AZ-204", "AZ-305"],
+      "secondary_certifications": ["AZ-500", "AZ-104"],
+      "core_skills": ["API Development", "Azure Functions", "Storage", "Networking", "IAM", "IaC"]
+    },
+    {
+      "role_id": "ROLE-DE",
+      "title": "DevOps Engineer",
+      "team_assignments": ["TEAM-B", "TEAM-D"],
+      "primary_certifications": ["AZ-400"],
+      "secondary_certifications": ["AZ-104", "AZ-204"],
+      "core_skills": ["CI/CD", "Monitoring", "GitHub Actions", "Containerization", "Scripting", "SRE"]
+    },
+    {
+      "role_id": "ROLE-DATA",
+      "title": "Data Engineer",
+      "team_assignments": ["TEAM-C"],
+      "primary_certifications": ["DP-203", "DP-300"],
+      "secondary_certifications": ["DP-100"],
+      "core_skills": ["ETL Pipelines", "Spark", "SQL", "Data Modeling", "Streaming", "Data Governance"]
+    },
+    {
+      "role_id": "ROLE-SEC",
+      "title": "Security Engineer",
+      "team_assignments": ["TEAM-E"],
+      "primary_certifications": ["AZ-500"],
+      "secondary_certifications": ["SC-200", "AZ-104"],
+      "core_skills": ["Threat Protection", "Identity Management", "Network Security", "Compliance", "Key Vault"]
+    }
+  ],
+
+  "certifications": [
+    {
+      "id": "AZ-104",
+      "name": "Microsoft Azure Administrator",
+      "skills_assessed": ["Virtual Machines", "Networking", "Storage", "IAM", "Monitoring"],
+      "recommended_study_hours": 20,
+      "pass_threshold_pct": 70,
+      "recommended_practice_score_before_exam": 80,
+      "difficulty_level": "Intermediate",
+      "prerequisites": [],
+      "validity_months": 24
+    },
+    {
+      "id": "AZ-204",
+      "name": "Microsoft Azure Developer Associate",
+      "skills_assessed": ["API Development", "Azure Functions", "Storage", "Messaging", "Caching"],
+      "recommended_study_hours": 25,
+      "pass_threshold_pct": 70,
+      "recommended_practice_score_before_exam": 80,
+      "difficulty_level": "Intermediate",
+      "prerequisites": [],
+      "validity_months": 24
+    },
+    {
+      "id": "AZ-305",
+      "name": "Microsoft Azure Solutions Architect Expert",
+      "skills_assessed": ["Architecture Design", "Governance", "Networking", "Business Continuity", "Data Solutions"],
+      "recommended_study_hours": 30,
+      "pass_threshold_pct": 70,
+      "recommended_practice_score_before_exam": 82,
+      "difficulty_level": "Advanced",
+      "prerequisites": ["AZ-104"],
+      "validity_months": 24
+    },
+    {
+      "id": "AZ-400",
+      "name": "Microsoft DevOps Engineer Expert",
+      "skills_assessed": ["CI/CD", "Source Control", "Monitoring", "Security in Pipelines", "IaC"],
+      "recommended_study_hours": 25,
+      "pass_threshold_pct": 70,
+      "recommended_practice_score_before_exam": 80,
+      "difficulty_level": "Advanced",
+      "prerequisites": ["AZ-104"],
+      "validity_months": 24
+    },
+    {
+      "id": "AZ-500",
+      "name": "Microsoft Azure Security Engineer",
+      "skills_assessed": ["Identity Management", "Platform Protection", "Security Operations", "Data Security"],
+      "recommended_study_hours": 22,
+      "pass_threshold_pct": 70,
+      "recommended_practice_score_before_exam": 82,
+      "difficulty_level": "Intermediate",
+      "prerequisites": [],
+      "validity_months": 24
+    },
+    {
+      "id": "DP-203",
+      "name": "Microsoft Azure Data Engineer Associate",
+      "skills_assessed": ["Data Storage", "Data Processing", "Data Security", "Monitoring Pipelines"],
+      "recommended_study_hours": 28,
+      "pass_threshold_pct": 70,
+      "recommended_practice_score_before_exam": 82,
+      "difficulty_level": "Intermediate",
+      "prerequisites": [],
+      "validity_months": 24
+    },
+    {
+      "id": "DP-300",
+      "name": "Microsoft Azure Database Administrator",
+      "skills_assessed": ["Database Planning", "Implementation", "Security", "Performance", "High Availability"],
+      "recommended_study_hours": 22,
+      "pass_threshold_pct": 70,
+      "recommended_practice_score_before_exam": 80,
+      "difficulty_level": "Intermediate",
+      "prerequisites": [],
+      "validity_months": 24
+    },
+    {
+      "id": "DP-100",
+      "name": "Microsoft Azure Data Scientist Associate",
+      "skills_assessed": ["ML Workloads", "Experiments", "Model Training", "Model Deployment"],
+      "recommended_study_hours": 26,
+      "pass_threshold_pct": 70,
+      "recommended_practice_score_before_exam": 80,
+      "difficulty_level": "Intermediate",
+      "prerequisites": [],
+      "validity_months": 24
+    },
+    {
+      "id": "SC-200",
+      "name": "Microsoft Security Operations Analyst",
+      "skills_assessed": ["Threat Detection", "Incident Response", "Sentinel", "Defender"],
+      "recommended_study_hours": 20,
+      "pass_threshold_pct": 70,
+      "recommended_practice_score_before_exam": 78,
+      "difficulty_level": "Intermediate",
+      "prerequisites": [],
+      "validity_months": 24
+    }
+  ],
+
+  "teams": [
+    {
+      "team_id": "TEAM-A",
+      "name": "Cloud Infrastructure",
+      "manager_id": "MGR-001",
+      "headcount": 38,
+      "avg_meeting_hours_per_week": 14.2,
+      "certification_target_count": 24,
+      "current_pass_rate_pct": 75
+    },
+    {
+      "team_id": "TEAM-B",
+      "name": "DevOps Platform",
+      "manager_id": "MGR-002",
+      "headcount": 31,
+      "avg_meeting_hours_per_week": 19.6,
+      "certification_target_count": 19,
+      "current_pass_rate_pct": 63
+    },
+    {
+      "team_id": "TEAM-C",
+      "name": "Data Engineering",
+      "manager_id": "MGR-003",
+      "headcount": 27,
+      "avg_meeting_hours_per_week": 15.8,
+      "certification_target_count": 18,
+      "current_pass_rate_pct": 72
+    },
+    {
+      "team_id": "TEAM-D",
+      "name": "Application Services",
+      "manager_id": "MGR-004",
+      "headcount": 24,
+      "avg_meeting_hours_per_week": 22.1,
+      "certification_target_count": 14,
+      "current_pass_rate_pct": 57
+    },
+    {
+      "team_id": "TEAM-E",
+      "name": "Security Engineering",
+      "manager_id": "MGR-005",
+      "headcount": 22,
+      "avg_meeting_hours_per_week": 16.5,
+      "certification_target_count": 12,
+      "current_pass_rate_pct": 67
+    }
+  ],
+
+  "business_rules": {
+    "optimal_meeting_hours_range": [12, 16],
+    "optimal_study_hours_per_week": [3.5, 4.5],
+    "critical_meeting_threshold": 20,
+    "minimum_practice_score_for_exam_approval": 80,
+    "max_consecutive_practice_failures_before_review": 3,
+    "focus_hour_utilization_target_pct": 75,
+    "reimbursement_eligible_after_days": 90,
+    "max_exam_retakes_funded": 2
+  },
+
+  "study_plan_templates": [
+    {
+      "certification_id": "AZ-204",
+      "weeks": 6,
+      "milestones": [
+        {"week": 1, "focus": "Core concepts and Azure App Service", "target_score": 50},
+        {"week": 2, "focus": "Azure Functions and Durable Functions", "target_score": 60},
+        {"week": 3, "focus": "Blob Storage, Cosmos DB, and Caching", "target_score": 65},
+        {"week": 4, "focus": "Authentication, Authorization, and Secure APIs", "target_score": 72},
+        {"week": 5, "focus": "Messaging, Event Grid, and Monitoring", "target_score": 78},
+        {"week": 6, "focus": "Full-length practice exams and weak-area review", "target_score": 82}
+      ]
+    },
+    {
+      "certification_id": "AZ-400",
+      "weeks": 6,
+      "milestones": [
+        {"week": 1, "focus": "Source control and branching strategies", "target_score": 50},
+        {"week": 2, "focus": "CI pipelines and build automation", "target_score": 60},
+        {"week": 3, "focus": "CD pipelines and release strategies", "target_score": 68},
+        {"week": 4, "focus": "Infrastructure as Code and configuration management", "target_score": 74},
+        {"week": 5, "focus": "Monitoring, logging, and feedback loops", "target_score": 78},
+        {"week": 6, "focus": "Full-length practice exams and gap remediation", "target_score": 82}
+      ]
+    },
+    {
+      "certification_id": "DP-203",
+      "weeks": 8,
+      "milestones": [
+        {"week": 1, "focus": "Data storage design patterns", "target_score": 45},
+        {"week": 2, "focus": "Batch processing with Spark and Data Factory", "target_score": 55},
+        {"week": 3, "focus": "Stream processing and Event Hubs", "target_score": 60},
+        {"week": 4, "focus": "Data security and governance", "target_score": 65},
+        {"week": 5, "focus": "Performance optimization and monitoring", "target_score": 70},
+        {"week": 6, "focus": "Integration scenarios and end-to-end pipelines", "target_score": 75},
+        {"week": 7, "focus": "Mixed topic practice and scenario questions", "target_score": 80},
+        {"week": 8, "focus": "Full-length practice exams and final review", "target_score": 85}
+      ]
+    },
+    {
+      "certification_id": "AZ-500",
+      "weeks": 6,
+      "milestones": [
+        {"week": 1, "focus": "Identity and access management fundamentals", "target_score": 50},
+        {"week": 2, "focus": "Platform protection and network security", "target_score": 60},
+        {"week": 3, "focus": "Security operations and threat detection", "target_score": 68},
+        {"week": 4, "focus": "Data and application security", "target_score": 74},
+        {"week": 5, "focus": "Governance, compliance, and Key Vault", "target_score": 78},
+        {"week": 6, "focus": "Full-length practice exams and remediation", "target_score": 82}
+      ]
+    }
+  ]
+}
