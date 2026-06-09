@@ -1,12 +1,9 @@
 .venv/
+.env
 __pycache__/
 *.pyc
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.env
-.dist/
-build/
-dist/
+.azure/
 *.egg-info/
-.vscode/.ropeproject/
+dist/
+build/
+VS/

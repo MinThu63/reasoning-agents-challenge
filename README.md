@@ -1,31 +1,36 @@
-# Multi-Agent Enterprise Learning System
+# SkillSentinel — Multi-Agent Enterprise Certification Readiness System
 
 > **All data in this repository is synthetic. No real employee names, company data, or PII is included.**
 
-A multi-agent system built for the Microsoft Foundry Reasoning Agents Challenge. It helps organizations manage internal team certification programs through intelligent routing, capacity-aware planning, and grounded knowledge retrieval.
+A multi-agent system built for the Microsoft Foundry Reasoning Agents Challenge. It helps organizations manage internal team certification programs through intelligent routing, capacity-aware planning, grounded knowledge retrieval, and multi-step Chain-of-Thought reasoning.
 
 ---
 
 ## Architecture
 
 ```
-User Message
+User Request
      ↓
-┌─────────────────────────────┐
-│   Entry Agent (Dispatcher)  │  ← Routes to the correct agent
-└─────────────┬───────────────┘
+┌─────────────────────────────────┐
+│  🎯 Mission Control (Router)    │  ← ARM-pattern CoT routing
+└─────────────┬───────────────────┘
               ↓
-┌─────────────────────────────────────────────────────────┐
-│                                                         │
-│  📚 Learning Path Curator      (Foundry IQ grounded)    │
-│  📅 Study Plan Generator       (Fabric IQ grounded)     │
-│  ⏰ Engagement Agent           (Work IQ grounded)       │
-│  📝 Assessment Agent           (Foundry IQ grounded)    │
-│  📊 Manager Insights Agent     (Fabric IQ + Work IQ)    │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│  📚 Learning Path Curator      (Foundry IQ — ADORE RAG)    │
+│  📅 Study Plan Generator       (Fabric IQ — CoT Planning)  │
+│  ⏰ Engagement Agent           (Work IQ — CoT Scheduling)  │
+│  📝 Assessment Agent           (Foundry IQ — Claim-Evidence)│
+│  📊 Manager Insights Agent     (Fabric IQ + Work IQ)       │
+│                                                             │
+└─────────────────────────┬───────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│  🛡️ Policy Guard         (5-Layer Safety Check)             │
+│  ✅ Verifier              (Self-Consistency Quality Gate)    │
+└─────────────────────────────────────────────────────────────┘
               ↓
-        Agent Response
+        Final Response (Structured JSON)
 ```
 
 ---
@@ -33,10 +38,25 @@ User Message
 ## How It Works
 
 1. User types a message (e.g., "Create a study plan for EMP-034")
-2. The **Dispatcher** classifies the intent and routes to the correct agent
-3. The specialized agent loads relevant data from the IQ layers
-4. The agent calls Azure AI Foundry (gpt-oss-120b) with a grounded system prompt
-5. The response is returned to the user
+2. **Mission Control** classifies intent using Chain-of-Thought routing and dispatches to the correct agent
+3. The specialized agent loads relevant IQ layer data and reasons step-by-step
+4. **Policy Guard** runs a 5-layer compliance check (PII, credentials, grounding, injection, scope)
+5. **Verifier** validates citation coverage, reasoning completeness, and internal consistency
+6. The structured JSON response is returned to the user
+
+---
+
+## Reasoning Techniques Applied
+
+| Technique | Source | Application |
+|-----------|--------|-------------|
+| Chain-of-Thought (CoT) | Wei et al. (2022) | All 8 agents use explicit STEP 1→4 reasoning |
+| RAG (ADORE Pattern) | arXiv:2601.18267 | Iterative retrieval in Curator + Assessment |
+| Self-Consistency CoT | Wang et al. (2022) | Verifier cross-checks outputs |
+| ARM Routing | ICLR 2026 | Mission Control routing as CoT blocks |
+| Layered-CoT | arXiv:2501.18645 | Policy Guard 5-layer check |
+| Source-Grounding Mandate | — | Zero unsourced claims allowed |
+| Anti-Extrapolation Guard | IMDA Framework | Explicit assumption flagging |
 
 ---
 
@@ -44,93 +64,100 @@ User Message
 
 | Layer | Purpose | Data Source |
 |-------|---------|-------------|
-| **Foundry IQ** | Grounded knowledge retrieval (company docs) | `docs/` → Azure Blob Storage → Knowledge Base |
-| **Fabric IQ** | Semantic business model (roles, certs, rules) | `data/semantic_model.json` |
-| **Work IQ** | Employee work patterns and calendar signals | `data/work_activity_signals.json` |
+| **Foundry IQ** | Grounded knowledge retrieval | `docs/engineering_certification_guide.md` |
+| **Fabric IQ** | Semantic business model | `data/semantic_model.json` |
+| **Work IQ** | Employee work patterns | `data/work_activity_signals.json` |
 
 ---
 
-## Agents — Detailed Responsibilities
+## Universal Constraints (House Rules)
 
-### 1. Entry Agent (Dispatcher)
-- Receives all user messages as the single entry point
-- Classifies intent (study plan, assessment, engagement, insights, or resource query)
-- Extracts context (employee ID, team ID, certification code) from the message
+Every agent enforces these 4 rules:
+
+1. **SOURCE-GROUNDING MANDATE** — Every factual claim must cite `[source: <file>, section: <section>]`
+2. **ANTI-EXTRAPOLATION GUARD** — Unknown info flagged as `ASSUMPTION FLAG`, never silently filled
+3. **CHAIN-OF-THOUGHT MANDATE** — Every response shows STEP 1→4 reasoning before the answer
+4. **OUTPUT FORMAT LOCK** — All outputs are structured JSON with a `reasoning_trace` field
+
+---
+
+## Agents — Responsibilities
+
+### 1. Mission Control (Orchestrator)
+- Classifies user intent via ARM-pattern CoT
+- Extracts context (employee ID, team, certification)
 - Routes to the correct specialized agent
-- Maintains conversation context across multiple turns
-- Does NOT answer questions itself — strictly orchestration only
+- Never answers directly — strictly routing
 
 ### 2. Learning Path Curator (Foundry IQ)
-- Maps certifications to organizational roles (Cloud Engineer → AZ-204, AZ-305, etc.)
-- Identifies prerequisite chains (e.g., AZ-104 before AZ-305)
-- Recommends learning resources grounded in the engineering certification guide
-- Estimates total study hours per certification
-- Cites internal documents by filename — does not fabricate external URLs
-- Answers: "What should I study?", "What cert fits my role?", "What are the prerequisites?"
+- Maps certifications to roles with prerequisite chains
+- Uses ADORE iterative retrieval pattern
+- Cites `engineering_certification_guide.md` for all recommendations
+- Flags skill domains with no approved source
 
 ### 3. Study Plan Generator (Fabric IQ)
-- Creates personalized week-by-week study schedules with specific milestones
-- Loads the employee's work signals (meeting hours, focus hours, preferred slot)
-- Adjusts timeline when meeting load exceeds the 20-hour critical threshold
-- Includes target practice scores for each milestone week
-- Uses study plan templates from the semantic model (AZ-204: 6 weeks, DP-203: 8 weeks, etc.)
-- Flags risks and suggests schedule changes if workload threatens study goals
-- Answers: "Create a plan for me", "How long will this take?", "I only have 3 weeks"
+- Creates week-by-week study plans with target scores
+- Accounts for meeting load, focus hours, calendar fragmentation
+- Flags CAPACITY_RISK when meetings >20 hrs/week
+- Includes fallback paths and buffer weeks
 
 ### 4. Engagement Agent (Work IQ)
-- Suggests personalized reminder schedules based on work patterns
-- Reads meeting load, focus hours, deep work blocks, and preferred learning slot
-- Adapts tone: encouraging if on track, empathetic if struggling
-- Avoids sending reminders during peak collaboration hours
-- Recommends schedule adjustments when focus hour utilization drops below 75%
-- Defines escalation triggers (when to involve the manager)
-- Answers: "When should I study?", "Help me stay on track", "I'm struggling with time"
+- Suggests study-safe windows based on work patterns
+- Adapts tone to workload (encouraging/empathetic)
+- Never schedules during meetings or outside 08:00-21:00
+- Defines escalation triggers for manager involvement
 
 ### 5. Assessment Agent (Foundry IQ)
-- Generates scenario-based multiple-choice practice questions (A, B, C, D)
-- Grounds questions in the engineering certification guide content
-- Tests different skill areas per question (no repetition)
-- Provides correct answers with explanations after each set
-- Evaluates readiness: "Ready" / "Not Ready" / "Borderline" based on scoring thresholds
-- Recommends specific focus areas if the learner isn't ready
-- Feeds results back into the system (informs study plan adjustments)
-- Answers: "Give me practice questions", "Am I ready for AZ-400?", "Quiz me"
+- Generates scenario-based questions grounded in certification guide
+- Zero-tolerance: discards any question without source citation
+- Evaluates readiness: READY / BORDERLINE / NOT_READY
+- Identifies weak domains for targeted study
 
 ### 6. Manager Insights Agent (Fabric IQ + Work IQ)
-- Aggregates team-level metrics: pass rate, avg practice score, at-risk count
-- Compares team performance against business rule benchmarks
-- Highlights capacity-constrained teams (high meeting load → low pass rate)
-- Identifies patterns: which teams are struggling and why
-- Provides actionable recommendations for managers
-- Assigns team health rating (Green / Yellow / Red)
-- NEVER exposes individual employee names or personal scores — aggregates only
-- Answers: "How is TEAM-D doing?", "Which team is at risk?", "Show me progress"
+- Aggregates team metrics without exposing individual data
+- Assigns health rating: GREEN / YELLOW / RED
+- Identifies systemic patterns (high meetings → low pass rates)
+- Provides actionable recommendations
+
+### 7. Policy Guard (Safety Layer)
+- 5-layer check: PII, credentials, grounding, injection, scope
+- Blocks responses that violate any hard constraint
+- Flags grounding gaps for Verifier review
+
+### 8. Verifier (Quality Gate)
+- Validates citation coverage (≥85% threshold)
+- Checks reasoning completeness and internal consistency
+- Audits assumption flags (>3 = escalate)
+- Final APPROVED / REVISE / ESCALATE verdict
 
 ---
 
 ## Project Structure
 
 ```
-VS/
-├── main.py                          ← Orchestrator (run this)
+├── main.py                          ← Entry point (run this)
 ├── agents/
-│   ├── learning_path_curator.py
-│   ├── study_plan_generator.py
-│   ├── engagement_agent.py
-│   ├── assessment_agent.py
-│   └── manager_insights_agent.py
+│   ├── __init__.py
+│   ├── base.py                      ← Universal constraints (house rules)
+│   ├── mission_control.py           ← Agent 1: Orchestrator
+│   ├── learning_path_curator.py     ← Agent 2: Foundry IQ
+│   ├── study_plan_generator.py      ← Agent 3: Fabric IQ
+│   ├── engagement_agent.py          ← Agent 4: Work IQ
+│   ├── assessment_agent.py          ← Agent 5: Foundry IQ
+│   ├── manager_insights_agent.py    ← Agent 6: Fabric IQ + Work IQ
+│   ├── policy_guard.py              ← Agent 7: Safety
+│   └── verifier.py                  ← Agent 8: Quality
 ├── data/
-│   ├── learner_performance.json     ← 18 learners with exam outcomes
-│   ├── work_activity_signals.json   ← 18 employees with work patterns
-│   └── semantic_model.json          ← Roles, certs, teams, rules, templates
+│   ├── semantic_model.json          ← Fabric IQ (roles, certs, rules, templates)
+│   ├── work_activity_signals.json   ← Work IQ (18 employees)
+│   └── learner_performance.json     ← Learner outcomes (18 records)
 ├── docs/
-│   ├── engineering_certification_guide.md
+│   ├── engineering_certification_guide.md   ← Foundry IQ knowledge
 │   ├── corporate_learning_policy.md
 │   └── quarterly_learning_report.md
-├── .env                             ← Azure credentials (not committed)
-├── .gitignore
 ├── requirements.txt
-└── README.md
+├── .env                             ← Azure credentials (not committed)
+└── .gitignore
 ```
 
 ---
@@ -146,12 +173,11 @@ python -m venv .venv
 pip install -r requirements.txt
 
 # 3. Configure .env
-# Add your Azure AI Foundry endpoint and API key:
-#   AZURE_AI_PROJECT_ENDPOINT=https://your-resource.services.ai.azure.com/api/projects/your-project
-#   AZURE_AI_MODEL_DEPLOYMENT=gpt-oss-120b
-#   AZURE_AI_API_KEY=your-key
+# AZURE_AI_PROJECT_ENDPOINT=https://your-resource.services.ai.azure.com/api/projects/your-project
+# AZURE_AI_MODEL_DEPLOYMENT=gpt-oss-120b
+# AZURE_AI_API_KEY=your-key
 
-# 4. Run the multi-agent system
+# 4. Run
 python main.py
 ```
 
@@ -159,70 +185,69 @@ python main.py
 
 ## Usage
 
-Run `python main.py` and type messages:
-
 ```
 👤 You: What certifications should a Cloud Engineer get?
-  🔄 Dispatcher routing... → 📚 Learning Path Curator
+  🔄 Mission Control → 📚 Learning Path Curator
+  ✅ Verifier: APPROVED
+
+🤖 SkillSentinel:
+{
+  "certification": "AZ-204",
+  "role": "Cloud Engineer",
+  "prerequisite_path": [],
+  "skill_domains": [...],
+  "reasoning_trace": "STEP 1: User asked for cert recommendations..."
+}
+
+──────────────────────────────────────────────────────
 
 👤 You: Create a study plan for EMP-034
-  🔄 Dispatcher routing... → 📅 Study Plan Generator
+  🔄 Mission Control → 📅 Study Plan Generator
+  ⚠️ Verifier: REVISE — capacity risk not addressed
+  ✅ Verifier: APPROVED
 
-👤 You: Give me practice questions for AZ-400
-  🔄 Dispatcher routing... → 📝 Assessment Agent
-
-👤 You: When should EMP-056 study this week?
-  🔄 Dispatcher routing... → ⏰ Engagement Agent
-
-👤 You: How is TEAM-D performing?
-  🔄 Dispatcher routing... → 📊 Manager Insights
-```
-
-Each agent can also run standalone:
-
-```powershell
-python agents/study_plan_generator.py --employee EMP-034
-python agents/assessment_agent.py --cert AZ-400 --questions 5
-python agents/engagement_agent.py --employee EMP-056
-python agents/manager_insights_agent.py --team TEAM-D
-python agents/learning_path_curator.py --role "Data Engineer"
+👤 You: How is TEAM-D doing?
+  🔄 Mission Control → 📊 Manager Insights
+  ✅ Verifier: APPROVED
 ```
 
 ---
 
 ## Synthetic Data
 
-- **Learner IDs:** L-1001 through L-1105 (18 records)
-- **Employee IDs:** EMP-001 through EMP-105 (cross-linked)
+- **Employee IDs:** EMP-001 through EMP-105 (18 records)
+- **Learner IDs:** L-1001 through L-1105
 - **Teams:** TEAM-A through TEAM-E (5 engineering teams)
 - **Certifications:** AZ-104, AZ-204, AZ-305, AZ-400, AZ-500, DP-100, DP-203, DP-300, SC-200
 - **Roles:** Cloud Engineer, DevOps Engineer, Data Engineer, Security Engineer
 
 ---
 
-## Azure AI Foundry Connection
-
-- **Project:** 24036948-0730
-- **Model:** gpt-oss-120b (Global Standard deployment)
-- **Region:** Japan East
-- **Auth:** API Key
-- **Knowledge Base:** Created in Azure AI Search (`learning-path-curator-resource`) with docs indexed from Azure Blob Storage (`learningcertstorage`)
-
----
-
 ## Challenge Requirements
 
-- ✅ Multi-agent system with 5 specialized agents + dispatcher
-- ✅ Microsoft Foundry SDK integration (model inference via Azure endpoint)
-- ✅ Reasoning and multi-step decision-making (dispatcher routes, agents reason over data)
-- ✅ At least one Microsoft IQ layer (all three integrated: Foundry IQ, Fabric IQ, Work IQ)
+- ✅ Multi-agent system (8 agents) with clear role specialization
+- ✅ Microsoft Foundry model inference (gpt-oss-120b via API)
+- ✅ Reasoning and multi-step decision-making (Chain-of-Thought in every agent)
+- ✅ All three Microsoft IQ layers (Foundry IQ, Fabric IQ, Work IQ)
 - ✅ Synthetic data only — no PII
 - ✅ Demoable with clear agent interactions
-- ✅ External tools integration (agents load and reason over structured JSON data)
+- ✅ Safety controls (Policy Guard) and quality validation (Verifier)
+- ✅ Source-grounding with citations and anti-hallucination guards
+- ✅ Research-backed reasoning patterns (Wei et al., Wang et al., ADORE, ARM)
 
 ---
 
-## Limitations
+## Research References
 
-- Foundry IQ knowledge base is configured but cannot be queried directly from agents due to Azure for Students subscription region restrictions (gpt-oss-120b does not support the `data_sources` parameter). Knowledge grounding is achieved through local document loading in agent system prompts.
-- In a production deployment with a standard GPT-4o model in a supported region, Foundry IQ would provide cited retrieval directly.
+1. Wei et al. (2022) — Chain-of-Thought Prompting Elicits Reasoning in LLMs
+2. Wang et al. (2022) — Self-Consistency Improves CoT Reasoning
+3. ADORE (2026) — Orchestrating Specialized Agents for Trustworthy Enterprise RAG (arXiv:2601.18267)
+4. ARM (ICLR 2026) — Agentic Reasoning Modules
+5. Sanwal (2025) — Layered Chain-of-Thought (arXiv:2501.18645)
+6. IMDA — Agentic AI Governance Framework
+
+---
+
+## License
+
+MIT
