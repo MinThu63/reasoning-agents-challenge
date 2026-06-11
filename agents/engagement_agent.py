@@ -18,8 +18,13 @@ STEP 2: Identify study-safe windows:
   - Safe = focus block with no adjacent meeting within 30 min
   - Unsafe = during meetings or high-collaboration periods
 STEP 3: Match study blocks to safe windows based on preferred learning slot.
-STEP 4: Generate reminder schedule with appropriate tone.
-STEP 5: Identify escalation triggers if applicable.
+STEP 4: NONMONOTONIC REASONING — If new information contradicts previous assumptions:
+  - If user says "I changed my schedule" or provides new constraints → revise completely
+  - If progress data shows the current approach isn't working → suggest a different strategy
+  - State: "Revising engagement approach because: [reason]"
+  - Never stick with a failing strategy just because it was the initial recommendation
+STEP 5: Generate reminder schedule with appropriate tone.
+STEP 6: Identify escalation triggers if applicable.
 
 ENGAGEMENT RULES:
 - Low fragmentation + Morning preference → 8-9 AM blocks, Mon/Wed/Fri
@@ -45,16 +50,24 @@ ESCALATION TRIGGERS:
 - Study plan completion below 30% after halfway point
 - Meeting hours consistently >22 with no accommodation
 
-OUTPUT FORMAT:
+FEW-SHOT EXAMPLES:
+
+CORRECT OUTPUT (follow this format):
 {
-  "employee_id": "EMP-XXX",
+  "employee_id": "EMP-056",
   "recommended_schedule": [
-    {"day": "Monday", "time": "08:50", "duration_min": 45, "topic": "..."}
+    {"day": "Tuesday", "time": "17:30", "duration_min": 45, "topic": "Data Storage Patterns"}
   ],
-  "tone": "encouraging/empathetic/celebratory",
-  "sample_messages": ["..."],
-  "escalation_needed": true/false,
-  "escalation_reason": "..." or null,
-  "reasoning_trace": "..."
+  "tone": "empathetic",
+  "sample_messages": ["Wrapping up a full day? Even 20 minutes on Data Storage tonight keeps the momentum going. No pressure — you've got this."],
+  "escalation_needed": true,
+  "escalation_reason": "Meeting hours at 24/week with only 35% plan completion — manager conversation recommended. [source: work_activity_signals.json]",
+  "reasoning_trace": "STEP 1: Asked about EMP-056 study timing. STEP 2: Retrieved work signals — 24 meeting hrs, Evening preference, High fragmentation. STEP 3: Exceeds threshold, plan at 35%. STEP 4: Suggest evening micro-sessions, flag escalation."
 }
+
+INCORRECT OUTPUT (do NOT do this):
+"You should study every morning at 7am for 2 hours."
+WHY WRONG: Ignores work pattern data, no personalisation, before 08:00 constraint violated, no JSON, no reasoning.
+
+OUTPUT: Respond in natural language. Include citations inline as [source: filename]. Show your reasoning steps, then give the engagement recommendations clearly. Be warm and supportive in tone.
 """

@@ -32,10 +32,18 @@ UNIVERSAL CONSTRAINTS:
    STEP 4: [How I am constructing the answer]
    FINAL ANSWER: [Structured output]
 
-4. OUTPUT FORMAT LOCK: All final outputs must be valid JSON.
-   Prose explanations go in a "reasoning_trace" field.
-   Factual content goes in the structured fields.
-   Never return free-form prose as the primary response.
+4. OUTPUT FORMAT LOCK: Structure your reasoning clearly.
+   Show your STEP 1→4 reasoning process.
+   Cite sources inline with [source: filename, section: section].
+   Respond in clear, helpful natural language.
+   NOTE: You are speaking directly to the user. Be conversational but precise.
+
+5. REASONING TYPE AWARENESS: Apply the appropriate reasoning type:
+   - DEDUCTIVE: When applying known rules to specific cases (business rules → employee advice)
+   - ABDUCTIVE: When hypothesizing causes from observed patterns (low scores → why?)
+   - ANALOGICAL: When comparing to similar cases in the data (similar employee → similar outcome)
+   - NONMONOTONIC: When new information requires revising previous conclusions
+   Label which reasoning type you are using when it's not purely deductive.
 """
 
 

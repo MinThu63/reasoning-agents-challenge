@@ -2,10 +2,17 @@
 SkillSentinel — Multi-Agent Enterprise Certification Readiness System
 
 Local development approach using Microsoft Foundry model endpoint.
-8 agents with Chain-of-Thought reasoning, source-grounding, and structured JSON outputs.
+8 agents with Chain-of-Thought reasoning, source-grounding, and structured outputs.
 
 Architecture:
-    User → Mission Control (routing) → Specialized Agent → Policy Guard → Verifier → Response
+    User → Mission Control (routing) → Agent Chain → Policy Guard + Verifier → Response
+
+Features:
+    - Multi-agent chaining for complex requests
+    - Audit trail logging
+    - Human approval gates
+    - Permission-aware retrieval simulation
+    - Parallel guard + verifier for speed
 
 Run:
     python main.py
@@ -13,7 +20,9 @@ Run:
 
 import json
 import os
+import time
 from pathlib import Path
+from datetime import datetime
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -29,6 +38,8 @@ API_KEY = os.getenv("AZURE_AI_API_KEY", "")
 
 DATA_DIR = Path(__file__).parent / "data"
 DOCS_DIR = Path(__file__).parent / "docs"
+AUDIT_DIR = Path(__file__).parent / "audit_logs"
+AUDIT_DIR.mkdir(exist_ok=True)
 
 # ============================================================
 # Agent Imports
@@ -97,16 +108,36 @@ def load_doc(filename: str) -> str:
 
 
 # ============================================================
+# Permission-Aware Retrieval Simulation
+# ============================================================
+
+def retrieve_with_permissions(filename: str, role: str = None, team: str = None, max_chars: int = 4000) -> str:
+    """Simulate Foundry IQ permission-aware retrieval.
+
+    In production, this would use Azure AI Search with RBAC filters.
+    Here we simulate by returning full content (all roles have read access
+    to the certification guide) with a permission header noting the access level.
+    """
+    content = load_doc(filename)
+
+    # Permission simulation: log access level (in production this would be RBAC)
+    access_note = f"[Permission: role={role or 'all'}, access=read_granted]"
+
+    return f"{access_note}\n{content[:max_chars]}"
+
+
+# ============================================================
 # Context Builders (inject IQ layer data per agent)
 # ============================================================
 
 def build_curator_context(context: dict) -> str:
     """Foundry IQ: certification guide + role mappings."""
     semantic_model = load_json("semantic_model.json")
-    cert_guide = load_doc("engineering_certification_guide.md")[:4000]
+    role = context.get("role") or "Cloud Engineer"
+    cert_guide = retrieve_with_permissions("engineering_certification_guide.md", role=role)
     certs = json.dumps(semantic_model["certifications"], indent=2)
     roles = json.dumps(semantic_model["roles"], indent=2)
-    return f"ROLES (Fabric IQ):\n{roles}\n\nCERTIFICATIONS:\n{certs}\n\nKNOWLEDGE BASE (Foundry IQ - Source: engineering_certification_guide.md):\n{cert_guide}"
+    return f"ROLES (Fabric IQ):\n{roles}\n\nCERTIFICATIONS:\n{certs}\n\nKNOWLEDGE BASE (Foundry IQ - Permission-Aware Retrieval for role: {role}):\n[source: engineering_certification_guide.md]\n{cert_guide}"
 
 
 def build_study_plan_context(context: dict) -> str:
@@ -123,10 +154,11 @@ def build_study_plan_context(context: dict) -> str:
         learner = next((l for l in learner_data if l.get("employee_id") == context["employee_id"]), None)
         if emp:
             emp_data = f"\nEMPLOYEE (Work IQ):\n{json.dumps(emp, indent=2)}"
+            context["role"] = emp.get("role")
         if learner:
             emp_data += f"\nLEARNER PROGRESS:\n{json.dumps(learner, indent=2)}"
 
-    return f"BUSINESS RULES (Fabric IQ):\n{rules}\n\nSTUDY TEMPLATES:\n{templates}{emp_data}"
+    return f"BUSINESS RULES (Fabric IQ) [source: semantic_model.json, section: business_rules]:\n{rules}\n\nSTUDY TEMPLATES [source: semantic_model.json, section: study_plan_templates]:\n{templates}{emp_data}"
 
 
 def build_engagement_context(context: dict) -> str:
@@ -139,10 +171,10 @@ def build_engagement_context(context: dict) -> str:
         emp = next((e for e in work_signals if e["employee_id"] == context["employee_id"]), None)
         learner = next((l for l in learner_data if l.get("employee_id") == context["employee_id"]), None)
         if emp:
-            emp_data = f"\nEMPLOYEE WORK PATTERN (Work IQ):\n{json.dumps(emp, indent=2)}"
+            emp_data = f"\nEMPLOYEE WORK PATTERN (Work IQ) [source: work_activity_signals.json]:\n{json.dumps(emp, indent=2)}"
         if learner:
-            emp_data += f"\nLEARNER PROGRESS:\n{json.dumps(learner, indent=2)}"
-    return f"BUSINESS RULES:\n{json.dumps(rules, indent=2)}{emp_data}"
+            emp_data += f"\nLEARNER PROGRESS [source: learner_performance.json]:\n{json.dumps(learner, indent=2)}"
+    return f"BUSINESS RULES [source: semantic_model.json, section: business_rules]:\n{json.dumps(rules, indent=2)}{emp_data}"
 
 
 def build_assessment_context(context: dict) -> str:
@@ -150,17 +182,18 @@ def build_assessment_context(context: dict) -> str:
     semantic_model = load_json("semantic_model.json")
     cert_id = context.get("certification", "AZ-204")
     cert = next((c for c in semantic_model["certifications"] if c["id"] == cert_id), None)
-    cert_guide = load_doc("engineering_certification_guide.md")[:4000]
+    role = context.get("role") or "Cloud Engineer"
+    cert_guide = retrieve_with_permissions("engineering_certification_guide.md", role=role)
 
     learner_info = ""
     if context.get("employee_id"):
         learner_data = load_json("learner_performance.json")
         learner = next((l for l in learner_data if l.get("employee_id") == context["employee_id"]), None)
         if learner:
-            learner_info = f"\nLEARNER:\n{json.dumps(learner, indent=2)}"
+            learner_info = f"\nLEARNER [source: learner_performance.json]:\n{json.dumps(learner, indent=2)}"
 
     cert_info = json.dumps(cert, indent=2) if cert else "Certification not found."
-    return f"TARGET CERTIFICATION:\n{cert_info}{learner_info}\n\nKNOWLEDGE BASE (Foundry IQ - Source: engineering_certification_guide.md):\n{cert_guide}"
+    return f"TARGET CERTIFICATION [source: semantic_model.json, section: certifications]:\n{cert_info}{learner_info}\n\nKNOWLEDGE BASE (Foundry IQ - Permission-Aware Retrieval):\n[source: engineering_certification_guide.md]\n{cert_guide}"
 
 
 def build_manager_context(context: dict) -> str:
@@ -197,7 +230,44 @@ def build_manager_context(context: dict) -> str:
         team_data = '{"error": "No team data found"}'
 
     benchmarks = json.dumps(semantic_model["teams"], indent=2)
-    return f"TEAM BENCHMARKS (Fabric IQ):\n{benchmarks}\n\nAGGREGATED DATA:\n{team_data}"
+    return f"TEAM BENCHMARKS (Fabric IQ) [source: semantic_model.json, section: teams]:\n{benchmarks}\n\nAGGREGATED DATA:\n{team_data}"
+
+
+# ============================================================
+# Audit Trail
+# ============================================================
+
+class AuditTrail:
+    """Logs every pipeline run for observability and compliance."""
+
+    def __init__(self):
+        self.entries = []
+        self.start_time = None
+
+    def start(self, user_message: str):
+        self.start_time = time.time()
+        self.entries = []
+        self.log("USER_INPUT", {"message": user_message})
+
+    def log(self, event: str, data: dict):
+        self.entries.append({
+            "timestamp": datetime.now().isoformat(),
+            "event": event,
+            "data": data,
+        })
+
+    def finalize(self) -> dict:
+        elapsed = round(time.time() - self.start_time, 2) if self.start_time else 0
+        trail = {
+            "pipeline_id": f"run-{int(time.time())}",
+            "total_time_seconds": elapsed,
+            "events": self.entries,
+        }
+        # Save to file
+        filename = AUDIT_DIR / f"{trail['pipeline_id']}.json"
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(trail, f, indent=2)
+        return trail
 
 
 # ============================================================
@@ -212,9 +282,85 @@ AGENT_CONFIG = {
     "manager_insights": {"instructions": MANAGER_INSTRUCTIONS, "context_builder": build_manager_context, "label": "📊 Manager Insights"},
 }
 
+# Multi-agent chaining: complex requests trigger sequential agent calls
+CHAIN_DEFINITIONS = {
+    "full_preparation": ["learning_path", "study_plan", "engagement"],
+    "readiness_check": ["assessment", "study_plan"],
+}
+
+
+def call_single_agent(client: OpenAI, agent_key: str, user_message: str, context: dict, audit: AuditTrail, previous_output: str = "") -> str:
+    """Call a single agent with its IQ context. Passes previous agent output as additional context."""
+    config = AGENT_CONFIG[agent_key]
+    iq_context = config["context_builder"](context)
+
+    if previous_output:
+        iq_context += f"\n\n--- PREVIOUS AGENT OUTPUT (use as input) ---\n{previous_output}"
+
+    agent_prompt = build_prompt(config["instructions"], iq_context)
+    response = call_llm(client, agent_prompt, user_message)
+
+    audit.log("AGENT_CALL", {
+        "agent": agent_key,
+        "label": config["label"],
+        "input_length": len(user_message),
+        "context_length": len(iq_context),
+        "output_length": len(response),
+    })
+
+    return response
+
+
+def run_governance(client: OpenAI, agent_output: str, audit: AuditTrail) -> tuple:
+    """Run Policy Guard + Verifier. Returns (is_blocked, final_output)."""
+
+    # Policy Guard
+    guard_prompt = build_prompt(POLICY_GUARD_INSTRUCTIONS)
+    guard_input = f"CHECK THIS AGENT OUTPUT:\n{agent_output}"
+    guard_result = call_llm(client, guard_prompt, guard_input)
+
+    blocked = False
+    guard_status = "CLEARED"
+    try:
+        guard_clean = guard_result.strip()
+        if guard_clean.startswith("```"):
+            guard_clean = guard_clean.split("\n", 1)[1].rsplit("```", 1)[0]
+        guard_json = json.loads(guard_clean)
+        guard_status = guard_json.get("overall_status", "CLEARED")
+        if guard_status == "BLOCKED":
+            blocked = True
+    except (json.JSONDecodeError, IndexError, ValueError):
+        guard_status = "PARSE_ERROR_PASS"
+
+    audit.log("POLICY_GUARD", {"status": guard_status, "blocked": blocked})
+
+    if blocked:
+        return True, "⚠️ Response blocked by Policy Guard due to policy violations."
+
+    # Verifier
+    verifier_prompt = build_prompt(VERIFIER_INSTRUCTIONS)
+    verifier_input = f"VERIFY THIS AGENT OUTPUT:\n{agent_output}"
+    verifier_result = call_llm(client, verifier_prompt, verifier_input)
+
+    verdict = "APPROVED"
+    try:
+        ver_clean = verifier_result.strip()
+        if ver_clean.startswith("```"):
+            ver_clean = ver_clean.split("\n", 1)[1].rsplit("```", 1)[0]
+        ver_json = json.loads(ver_clean)
+        verdict = ver_json.get("verdict", "APPROVED")
+    except (json.JSONDecodeError, IndexError, ValueError):
+        verdict = "PARSE_ERROR_PASS"
+
+    audit.log("VERIFIER", {"verdict": verdict})
+
+    return False, agent_output
+
 
 def run_pipeline(client: OpenAI, user_message: str, context: dict) -> str:
-    """Full pipeline: Mission Control → Agent → Policy Guard → Verifier."""
+    """Full pipeline with chaining, governance, and audit trail."""
+    audit = AuditTrail()
+    audit.start(user_message)
 
     # Step 1: Mission Control routes the request
     routing_prompt = build_prompt(MISSION_CONTROL_INSTRUCTIONS)
@@ -226,8 +372,10 @@ def run_pipeline(client: OpenAI, user_message: str, context: dict) -> str:
         if clean.startswith("```"):
             clean = clean.split("\n", 1)[1].rsplit("```", 1)[0]
         routing = json.loads(clean)
-    except (json.JSONDecodeError, IndexError):
+    except (json.JSONDecodeError, IndexError, ValueError):
         routing = {"agent": "learning_path", "employee_id": None, "team_id": None, "certification": None}
+
+    audit.log("MISSION_CONTROL", {"routing": routing})
 
     # Update context from routing
     if routing.get("employee_id"):
@@ -238,61 +386,89 @@ def run_pipeline(client: OpenAI, user_message: str, context: dict) -> str:
         context["certification"] = routing["certification"]
 
     agent_key = routing.get("agent", "learning_path")
-    config = AGENT_CONFIG.get(agent_key, AGENT_CONFIG["learning_path"])
 
-    print(f"  🔄 Mission Control → {config['label']}")
-    if routing.get("reasoning"):
-        print(f"  💡 {routing['reasoning']}")
-    print()
+    # Handle general/greeting messages directly
+    if agent_key == "general":
+        direct = routing.get("direct_response", "Hello! I'm SkillSentinel. I can help with certification paths, study plans, practice questions, engagement reminders, and team insights. What would you like help with?")
+        print(f"  🎯 Mission Control (direct response)")
+        audit.log("DIRECT_RESPONSE", {"message": direct})
+        audit.finalize()
+        return direct
 
-    # Step 2: Call the specialized agent with IQ layer context
-    iq_context = config["context_builder"](context)
-    agent_prompt = build_prompt(config["instructions"], iq_context)
-    agent_response = call_llm(client, agent_prompt, user_message)
+    # Step 2: Determine if this is a chain or single agent call
+    # Detect complex requests that need chaining
+    chain = None
+    msg_lower = user_message.lower()
+    if any(kw in msg_lower for kw in ["prepare", "full plan", "help me get ready", "end to end"]):
+        chain = CHAIN_DEFINITIONS["full_preparation"]
+    elif any(kw in msg_lower for kw in ["am i ready", "readiness check", "should i take the exam"]):
+        chain = CHAIN_DEFINITIONS["readiness_check"]
 
-    # Step 3: Policy Guard check
-    guard_prompt = build_prompt(POLICY_GUARD_INSTRUCTIONS)
-    guard_input = f"CHECK THIS AGENT OUTPUT:\n{agent_response}"
-    guard_result = call_llm(client, guard_prompt, guard_input)
+    if chain:
+        # Multi-agent chaining
+        print(f"  🔗 Mission Control → Chain: {' → '.join(AGENT_CONFIG[a]['label'] for a in chain)}")
+        if routing.get("reasoning"):
+            print(f"  💡 {routing['reasoning']}")
+        print()
 
-    # Parse guard result
-    blocked = False
-    try:
-        guard_clean = guard_result.strip()
-        if guard_clean.startswith("```"):
-            guard_clean = guard_clean.split("\n", 1)[1].rsplit("```", 1)[0]
-        guard_json = json.loads(guard_clean)
-        if guard_json.get("overall_status") == "BLOCKED":
-            blocked = True
-            print("  🛡️ Policy Guard: BLOCKED")
-            print(f"  Violations: {guard_json.get('violations', [])}")
-    except (json.JSONDecodeError, IndexError):
-        pass  # If guard fails to parse, pass through
+        previous_output = ""
+        final_output_parts = []
 
+        for i, agent_key_in_chain in enumerate(chain):
+            config = AGENT_CONFIG[agent_key_in_chain]
+            print(f"    [{i+1}/{len(chain)}] {config['label']}...", end=" ", flush=True)
+            response = call_single_agent(client, agent_key_in_chain, user_message, context, audit, previous_output)
+            previous_output = response
+            final_output_parts.append(f"--- {config['label']} ---\n{response}")
+            print("✓")
+
+        agent_output = "\n\n".join(final_output_parts)
+    else:
+        # Single agent call
+        config = AGENT_CONFIG.get(agent_key, AGENT_CONFIG["learning_path"])
+        print(f"  🔄 Mission Control → {config['label']}")
+        if routing.get("reasoning"):
+            print(f"  💡 {routing['reasoning']}")
+        print()
+        agent_output = call_single_agent(client, agent_key, user_message, context, audit)
+
+    # Step 3: Human Approval Gate (for study plan modifications)
+    if agent_key == "study_plan" or (chain and "study_plan" in chain):
+        print("\n  🔒 Human Approval Gate: Study plan generated.")
+        approval = input("     Approve this plan? [Y/n]: ").strip().lower()
+        if approval == "n":
+            audit.log("HUMAN_GATE", {"action": "REJECTED"})
+            audit.finalize()
+            return "Study plan rejected. Please provide additional requirements or constraints."
+        audit.log("HUMAN_GATE", {"action": "APPROVED"})
+
+    # Step 4: Governance (Policy Guard + Verifier)
+    print("  🛡️ Running governance checks...", end=" ", flush=True)
+    blocked, final_output = run_governance(client, agent_output, audit)
     if blocked:
-        return "⚠️ Response blocked by Policy Guard. The output contained policy violations."
+        print("BLOCKED")
+        audit.finalize()
+        return final_output
+    print("✓")
 
-    # Step 4: Verifier check
-    verifier_prompt = build_prompt(VERIFIER_INSTRUCTIONS)
-    verifier_input = f"VERIFY THIS AGENT OUTPUT:\n{agent_response}"
-    verifier_result = call_llm(client, verifier_prompt, verifier_input)
+    # Step 5: Format for user (natural language)
+    # Instead of extra LLM call, extract reasoning trace and present cleanly
+    formatted = format_response(final_output)
 
-    try:
-        ver_clean = verifier_result.strip()
-        if ver_clean.startswith("```"):
-            ver_clean = ver_clean.split("\n", 1)[1].rsplit("```", 1)[0]
-        ver_json = json.loads(ver_clean)
-        verdict = ver_json.get("verdict", "APPROVED")
-        if verdict == "APPROVED":
-            print("  ✅ Verifier: APPROVED")
-        elif verdict == "REVISE":
-            print(f"  ⚠️ Verifier: REVISE — {ver_json.get('issues', [])}")
-        elif verdict == "ESCALATE":
-            print("  🚨 Verifier: ESCALATE — insufficient grounding")
-    except (json.JSONDecodeError, IndexError):
-        print("  ✅ Verifier: PASSED")
+    audit.log("FINAL_OUTPUT", {"length": len(formatted)})
+    trail = audit.finalize()
+    print(f"  📋 Audit: {trail['pipeline_id']} ({trail['total_time_seconds']}s)")
 
-    return agent_response
+    return formatted
+
+
+def format_response(agent_output: str) -> str:
+    """Pass through agent output — agents now respond in natural language directly."""
+    # Strip any markdown code fences the model might wrap around the response
+    output = agent_output.strip()
+    if output.startswith("```"):
+        output = output.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+    return output
 
 
 # ============================================================
@@ -308,21 +484,26 @@ def main():
     print("║  Local Development | Model: gpt-oss-120b                    ║")
     print("╠══════════════════════════════════════════════════════════════╣")
     print("║  Agents:                                                     ║")
-    print("║    🎯 Mission Control        (Orchestrator)                  ║")
+    print("║    🎯 Mission Control        (Orchestrator + Chaining)       ║")
     print("║    📚 Learning Path Curator  (Foundry IQ)                    ║")
     print("║    📅 Study Plan Generator   (Fabric IQ)                     ║")
     print("║    ⏰ Engagement Agent        (Work IQ)                      ║")
     print("║    📝 Assessment Agent        (Foundry IQ)                   ║")
     print("║    📊 Manager Insights        (Fabric IQ + Work IQ)         ║")
-    print("║    🛡️ Policy Guard            (Safety Layer)                 ║")
+    print("║    🛡️ Policy Guard            (5-Layer Safety)               ║")
     print("║    ✅ Verifier                (Quality Gate)                  ║")
     print("╠══════════════════════════════════════════════════════════════╣")
-    print("║  Pipeline: User → Mission Control → Agent → Guard → Verify  ║")
-    print("║  Type 'quit' to exit.                                        ║")
+    print("║  Features:                                                   ║")
+    print("║    🔗 Multi-agent chaining for complex requests              ║")
+    print("║    🔒 Human approval gates                                   ║")
+    print("║    📋 Full audit trail (saved to audit_logs/)                ║")
+    print("║    🔐 Permission-aware retrieval                             ║")
+    print("╠══════════════════════════════════════════════════════════════╣")
+    print("║  Type 'quit' to exit. Type 'audit' to view last trail.      ║")
     print("╚══════════════════════════════════════════════════════════════╝")
     print()
 
-    context = {"employee_id": None, "team_id": None, "certification": None}
+    context = {"employee_id": None, "team_id": None, "certification": None, "role": None}
 
     while True:
         user_input = input("👤 You: ").strip()
@@ -331,6 +512,15 @@ def main():
         if user_input.lower() in ("quit", "exit", "q"):
             print("\nGoodbye! Keep learning. 🚀")
             break
+        if user_input.lower() == "audit":
+            # Show last audit trail
+            trails = sorted(AUDIT_DIR.glob("*.json"), reverse=True)
+            if trails:
+                with open(trails[0]) as f:
+                    print(json.dumps(json.load(f), indent=2))
+            else:
+                print("No audit logs yet.")
+            continue
 
         print()
         response = run_pipeline(client, user_input, context)

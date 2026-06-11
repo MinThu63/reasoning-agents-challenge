@@ -19,8 +19,18 @@ STEP 3: Calculate capacity:
   - If meeting hours 16-20: extend by 1 week, suggest evening/weekend
   - If meeting hours <16: standard timeline
   - If focus hours <2: CRITICAL RISK — micro-learning approach
-STEP 4: Sequence domains by prerequisite dependency.
-STEP 5: Allocate domains to weeks with target practice scores.
+STEP 4: ANALOGICAL REASONING — Check if similar employees exist in the learner data:
+  - Find employees with similar role, certification target, and meeting load
+  - If a similar employee passed: note their study hours and timeline as reference
+  - If a similar employee failed: note what was different and adjust plan accordingly
+  - State: "Based on similar learner profiles: [observation]"
+STEP 5: NONMONOTONIC REASONING — If the user provides new constraints that conflict
+  with a previously generated plan or standard template, explicitly revise:
+  - State: "Revising standard template based on new constraint: [constraint]"
+  - Adjust timeline, hours, or approach accordingly
+  - Do NOT rigidly follow the template if real data contradicts it
+STEP 6: Sequence domains by prerequisite dependency.
+STEP 7: Allocate domains to weeks with target practice scores.
 
 IN-CONTEXT CONSTRAINTS:
 - NEVER schedule more than 3h/day study (cognitive load ceiling)
@@ -34,19 +44,27 @@ WORKLOAD ADJUSTMENT RULES:
 - Meeting hours >20: WARN employee, +2-4 weeks, suggest manager conversation
 - Calendar fragmentation "High": recommend end-of-day consolidated blocks
 
-OUTPUT FORMAT:
+FEW-SHOT EXAMPLES:
+
+CORRECT OUTPUT (follow this format):
 {
-  "employee_id": "EMP-XXX",
-  "certification": "XX-XXX",
-  "total_required_hours": N,
-  "weeks_available": N,
-  "capacity_risk": true/false,
-  "risk_reason": "..." or null,
+  "employee_id": "EMP-034",
+  "certification": "AZ-400",
+  "total_required_hours": 25,
+  "weeks_available": 8,
+  "capacity_risk": true,
+  "risk_reason": "Meeting hours (21/week) exceed critical threshold of 20. [source: semantic_model.json, section: business_rules]",
   "milestones": [
-    {"week": 1, "focus": "...", "target_score": N, "hours": N}
+    {"week": 1, "focus": "Source control and branching strategies", "target_score": 50, "hours": 3}
   ],
-  "recommended_study_slot": "Morning/Evening/Weekend",
-  "fallback_path": ["..."],
-  "reasoning_trace": "..."
+  "recommended_study_slot": "Evening",
+  "fallback_path": ["Deprioritise advanced IaC if behind by Week 4"],
+  "reasoning_trace": "STEP 1: Asked to create plan for EMP-034. STEP 2: Retrieved work signals — 21 meeting hrs, Evening preference. STEP 3: Exceeds 20hr threshold → CAPACITY_RISK. STEP 4: Extended timeline by 2 weeks, allocated evening blocks."
 }
+
+INCORRECT OUTPUT (do NOT do this):
+"Here's a 4-week study plan: Week 1 - study everything, Week 2 - practice..."
+WHY WRONG: No employee context considered, no capacity check, no JSON, no source citations, unrealistic timeline for overloaded employee.
+
+OUTPUT: Respond in natural language. Include citations inline as [source: filename, section: ...]. Show your reasoning steps, then give the plan clearly.
 """

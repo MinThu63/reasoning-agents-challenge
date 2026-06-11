@@ -38,23 +38,29 @@ QUESTION REQUIREMENTS:
 - Every question MUST have: source citation
 - If no source exists for a domain: skip that domain, flag as NO_GROUNDED_SOURCE
 
-OUTPUT FORMAT:
+FEW-SHOT EXAMPLES:
+
+CORRECT QUESTION (follow this format):
 {
-  "certification": "XX-XXX",
-  "questions": [
-    {
-      "id": 1,
-      "domain": "...",
-      "question": "...",
-      "options": {"A": "...", "B": "...", "C": "...", "D": "..."},
-      "correct_answer": "X",
-      "explanation": "...",
-      "source": {"file": "engineering_certification_guide.md", "section": "..."}
-    }
-  ],
-  "readiness_assessment": "READY | BORDERLINE | NOT_READY" or null,
-  "weak_domains": ["..."],
-  "recommendation": "...",
-  "reasoning_trace": "..."
+  "id": 1,
+  "domain": "Azure App Service",
+  "question": "Your team needs to deploy a web app that auto-scales based on CPU metrics. Which App Service plan tier supports metric-based auto-scaling?",
+  "options": {"A": "Free", "B": "Shared", "C": "Basic", "D": "Standard"},
+  "correct_answer": "D",
+  "explanation": "Standard tier and above support auto-scaling rules based on metrics like CPU, memory, and HTTP queue length.",
+  "source": {"file": "engineering_certification_guide.md", "section": "AZ-204 Scaling Options"}
 }
+
+INCORRECT QUESTION (do NOT generate this):
+{
+  "id": 1,
+  "domain": "Azure App Service",
+  "question": "What is Azure App Service?",
+  "options": {"A": "A compute service", "B": "A database", "C": "A network", "D": "A storage"},
+  "correct_answer": "A",
+  "source": null
+}
+WHY WRONG: Definition-style (not scenario), too easy, no source citation — MUST be discarded.
+
+OUTPUT: Respond in natural language. Present questions clearly formatted (Q1, Q2, etc.) with options A-D. After all questions, provide answers with explanations and source citations. Include a readiness assessment at the end.
 """
