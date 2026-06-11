@@ -113,18 +113,108 @@ USER REQUEST
 
 ---
 
-## Agents — Responsibilities
+## Agents — Detailed Responsibilities
 
-| # | Agent | IQ Layer | Role |
-|---|-------|----------|------|
-| 1 | 🎯 Mission Control | — | Routes requests, detects chains, handles greetings |
-| 2 | 📚 Learning Path Curator | Foundry IQ | Maps certs to roles, prerequisite chains, grounded resources |
-| 3 | 📅 Study Plan Generator | Fabric IQ | Week-by-week plans, capacity risk, fallback paths |
-| 4 | ⏰ Engagement Agent | Work IQ | Personalized reminders, safe windows, tone adaptation |
-| 5 | 📝 Assessment Agent | Foundry IQ | Grounded practice questions, readiness scoring |
-| 6 | 📊 Manager Insights | Fabric IQ + Work IQ | Team aggregates, health ratings, privacy-preserving |
-| 7 | 🛡️ Policy Guard | — | PII/credential/injection/scope/grounding checks |
-| 8 | ✅ Verifier | — | Citation coverage, completeness, consistency audit |
+---
+
+### 1. 🎯 Mission Control Agent — Orchestrator
+
+- **Function:** Classifies user intent via ARM-pattern Chain-of-Thought routing, detects complex multi-agent requests, extracts context (employee ID, team, certification, role), and dispatches to the correct agent or chain.
+- **Required input:** User message (natural language).
+- **Desired output:** JSON routing decision with `agent`, `employee_id`, `team_id`, `certification`, and `reasoning`. For greetings, returns a direct response.
+- **Rejection conditions:** Never answers domain questions directly. If intent is unclear, routes to Learning Path Curator as default. If message is a greeting or out-of-scope small talk, handles directly without calling sub-agents.
+- **Chain detection:** Triggers multi-agent chains for complex requests (e.g., "help me prepare" → Curator → Study Plan → Engagement).
+
+---
+
+### 2. 📚 Learning Path Curator Agent — Microsoft Learn / Exam-Tailored
+
+- **Function:** Maps a Microsoft role-based certification target to the correct exam path, skills measured domains, prerequisite/foundation suggestions, and approved learning resources. Grounds all recommendations in the Engineering Certification Guide and live Microsoft Learn search results.
+- **Required input:** Role, target certification (optional), experience level (inferred from context), available hours per week (from Work IQ if employee provided).
+- **Desired output:** Ordered learning path with certification IDs, exam focus domains, domain-level learning resources, study sequence, estimated hours, and source citations from `engineering_certification_guide.md` and Microsoft Learn API.
+- **Rejection agent:** Policy Guard Agent.
+- **Rejection conditions:** Reject if the certification code is unknown, if no approved Microsoft Learn-aligned resource is found, or if the request asks for brain dumps / exam cheating content instead of legitimate preparation.
+- **IQ Layers:** Foundry IQ (Azure AI Search knowledge base + local certification guide), Microsoft Learn Search API.
+- **Reasoning techniques:** ADORE iterative RAG, Chain-of-Thought curation, source-grounding mandate.
+
+---
+
+### 3. 📅 Study Plan Generator Agent — Capacity-Aware Scheduling
+
+- **Function:** Converts a learning path into a personalized, week-by-week study schedule that accounts for the employee's meeting load, focus hours, calendar fragmentation, and preferred learning slot. Flags capacity risks and provides fallback paths.
+- **Required input:** Certification target, employee work signals (meeting hours, focus hours, preferred slot), learner progress data (if available), deadline (optional).
+- **Desired output:** Week-by-week milestone plan with topics, target practice scores, hours allocated per week, capacity risk assessment, recommended study slot, and fallback path if behind schedule.
+- **Rejection agent:** Policy Guard Agent.
+- **Rejection conditions:** Reject if employee ID is invalid, if no work signal data exists (returns ASSUMPTION FLAG), or if the requested timeline is physically impossible given workload (flags as CRITICAL_RISK instead of generating unrealistic plan).
+- **IQ Layers:** Fabric IQ (business rules, study templates, certification details), Work IQ (employee work patterns).
+- **Reasoning techniques:** Chain-of-Thought planning, analogical reasoning (compares to similar learner profiles), nonmonotonic reasoning (revises plan on new constraints), deductive reasoning (applies business rules).
+
+---
+
+### 4. ⏰ Engagement Agent — Work-Context Reminders
+
+- **Function:** Keeps learners progressing by generating personalized, context-aware reminder schedules. Identifies study-safe windows that don't conflict with meetings, adapts tone to workload pressure, and defines escalation triggers when intervention is needed.
+- **Required input:** Employee work pattern (meeting hours, focus blocks, preferred slot, fragmentation score), learner progress (practice score, plan completion %).
+- **Desired output:** Weekly reminder schedule with specific days/times, recommended tone (encouraging/empathetic/celebratory), sample reminder messages, escalation flag with reason if applicable.
+- **Rejection agent:** Policy Guard Agent.
+- **Rejection conditions:** Reject if attempting to schedule reminders before 08:00 or after 21:00, during known meeting blocks, or more than 2 reminders per day. If no work signal data exists, falls back to default schedule with ASSUMPTION FLAG.
+- **IQ Layers:** Work IQ (employee calendar signals, collaboration load).
+- **Reasoning techniques:** Chain-of-Thought scheduling, nonmonotonic reasoning (revises approach if current strategy isn't producing results).
+
+---
+
+### 5. 📝 Assessment Agent — Grounded Question Generation
+
+- **Function:** Evaluates learner readiness by generating scenario-based practice questions grounded in the Engineering Certification Guide. Scores responses against certification pass thresholds and provides a readiness assessment with specific weak domains identified.
+- **Required input:** Target certification, skill domains (from context), learner's current practice score (if available).
+- **Desired output:** 5 scenario-based multiple-choice questions (A, B, C, D) each citing a source, correct answers with explanations, readiness assessment (READY / BORDERLINE / NOT_READY), and weak domain recommendations.
+- **Rejection agent:** Policy Guard Agent.
+- **Rejection conditions:** Reject (discard) any question that cannot be mapped to a specific source passage in the knowledge base. If fewer than 5 grounded questions can be generated, return what's available with a gap flag. Reject requests for actual exam answers or brain dumps.
+- **IQ Layers:** Foundry IQ (Azure AI Search knowledge base + certification guide + Microsoft Learn API).
+- **Reasoning techniques:** ADORE RAG (Claim-Evidence Graph), Chain-of-Thought scoring, source-grounding mandate (zero-tolerance on unsourced questions).
+
+---
+
+### 6. 📊 Manager Insights Agent — Team Analytics
+
+- **Function:** Provides team-level visibility into certification readiness and workforce development. Calculates aggregate metrics, identifies systemic patterns, hypothesizes root causes using abductive reasoning, and generates actionable recommendations — all without exposing individual employee data.
+- **Required input:** Team ID (optional — if omitted, reports on all teams). Uses learner performance data and work signals.
+- **Desired output:** Team health rating (🟢 GREEN / 🟡 YELLOW / 🔴 RED), aggregate metrics (pass rate, avg score, at-risk count), identified patterns, hypothesized causes, and actionable recommendations.
+- **Rejection agent:** Policy Guard Agent.
+- **Rejection conditions:** BLOCK if output contains individual employee IDs, names, or personal scores in the team summary. Redirect specific-person queries to aggregate view. If data is null for any field, exclude from analytics with ASSUMPTION FLAG.
+- **IQ Layers:** Fabric IQ (team benchmarks, business rules), Work IQ (team-level meeting/focus aggregates).
+- **Reasoning techniques:** Chain-of-Thought analytics, abductive reasoning (hypothesizes causes of patterns), deductive reasoning (applies health rating criteria).
+
+---
+
+### 7. 🛡️ Policy Guard Agent — Governance & Safety
+
+- **Function:** Validates all agent outputs before they reach the user through a 5-layer compliance check. Acts as the safety and governance gate for the entire system.
+- **Required input:** Any agent output (passed through automatically by the pipeline).
+- **Desired output:** Layer-by-layer pass/fail results and an overall status (CLEARED / BLOCKED / FLAGGED).
+- **Layers:**
+  - Layer 1: PII Scan (real names, emails, phone numbers → BLOCK)
+  - Layer 2: Credential Scan (API keys, tokens, passwords → BLOCK)
+  - Layer 3: Grounding Compliance (unsourced claims → FLAG for Verifier)
+  - Layer 4: Prompt Injection (instruction override attempts → BLOCK)
+  - Layer 5: Scope Compliance (out-of-scope advice → BLOCK)
+- **Rejection conditions:** Immediately blocks on PII, credentials, injection, or out-of-scope content. Flags grounding issues for Verifier review. When uncertain, returns UNCERTAIN with recommendation for human review.
+- **Reasoning techniques:** Layered Chain-of-Thought (arXiv:2501.18645), deductive rule application.
+
+---
+
+### 8. ✅ Verifier Agent — Quality Gate
+
+- **Function:** Final quality validation before response release. Checks citation coverage, reasoning completeness, internal consistency, and assumption count. Uses Self-Consistency CoT (Wang et al. 2022) to cross-validate outputs.
+- **Required input:** Agent output (passed through automatically after Policy Guard clears).
+- **Desired output:** Verdict (APPROVED / REVISE / ESCALATE) with layer-by-layer scores.
+- **Layers:**
+  - Layer 1: Citation Coverage (≥85% cited claims required, else REVISE)
+  - Layer 2: Reasoning Completeness (all required fields present, else REVISE)
+  - Layer 3: Internal Consistency (cert IDs match, employee IDs match, rules applied correctly)
+  - Layer 4: Assumption Audit (>3 ASSUMPTION FLAGs → ESCALATE to human review)
+- **Rejection conditions:** REVISE if citation coverage <85% or required fields missing. ESCALATE if too many assumptions indicate insufficient grounding. Never releases content that hasn't met quality thresholds.
+- **Reasoning techniques:** Self-Consistency CoT (Wang et al. 2022), layered verification chain.
 
 ---
 
