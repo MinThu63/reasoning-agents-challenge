@@ -54,6 +54,7 @@ from agents.assessment_agent import INSTRUCTIONS as ASSESSMENT_INSTRUCTIONS
 from agents.manager_insights_agent import INSTRUCTIONS as MANAGER_INSTRUCTIONS
 from agents.policy_guard import INSTRUCTIONS as POLICY_GUARD_INSTRUCTIONS
 from agents.verifier import INSTRUCTIONS as VERIFIER_INSTRUCTIONS
+from agents.tools import search_microsoft_learn, query_knowledge_base
 
 
 # ============================================================
@@ -131,13 +132,31 @@ def retrieve_with_permissions(filename: str, role: str = None, team: str = None,
 # ============================================================
 
 def build_curator_context(context: dict) -> str:
-    """Foundry IQ: certification guide + role mappings."""
+    """Foundry IQ: certification guide + role mappings + external tools."""
     semantic_model = load_json("semantic_model.json")
     role = context.get("role") or "Cloud Engineer"
     cert_guide = retrieve_with_permissions("engineering_certification_guide.md", role=role)
     certs = json.dumps(semantic_model["certifications"], indent=2)
     roles = json.dumps(semantic_model["roles"], indent=2)
-    return f"ROLES (Fabric IQ):\n{roles}\n\nCERTIFICATIONS:\n{certs}\n\nKNOWLEDGE BASE (Foundry IQ - Permission-Aware Retrieval for role: {role}):\n[source: engineering_certification_guide.md]\n{cert_guide}"
+
+    # External tool: Search Microsoft Learn for additional resources
+    cert_id = context.get("certification")
+    if cert_id:
+        learn_results = search_microsoft_learn(f"{cert_id} certification study guide")
+    else:
+        learn_results = search_microsoft_learn(f"{role} Azure certification path")
+
+    # External tool: Query Foundry IQ knowledge base
+    kb_results = query_knowledge_base(f"{role} certification requirements")
+
+    return (
+        f"ROLES (Fabric IQ):\n{roles}\n\n"
+        f"CERTIFICATIONS:\n{certs}\n\n"
+        f"KNOWLEDGE BASE (Foundry IQ - Permission-Aware Retrieval for role: {role}):\n"
+        f"[source: engineering_certification_guide.md]\n{cert_guide}\n\n"
+        f"EXTERNAL TOOL — Microsoft Learn Search:\n{learn_results}\n\n"
+        f"EXTERNAL TOOL — Foundry IQ Knowledge Base:\n{kb_results}"
+    )
 
 
 def build_study_plan_context(context: dict) -> str:
@@ -178,7 +197,7 @@ def build_engagement_context(context: dict) -> str:
 
 
 def build_assessment_context(context: dict) -> str:
-    """Foundry IQ: certification guide + scoring thresholds."""
+    """Foundry IQ: certification guide + scoring thresholds + external tools."""
     semantic_model = load_json("semantic_model.json")
     cert_id = context.get("certification", "AZ-204")
     cert = next((c for c in semantic_model["certifications"] if c["id"] == cert_id), None)
@@ -192,8 +211,21 @@ def build_assessment_context(context: dict) -> str:
         if learner:
             learner_info = f"\nLEARNER [source: learner_performance.json]:\n{json.dumps(learner, indent=2)}"
 
+    # External tool: Search Microsoft Learn for exam-specific content
+    learn_results = search_microsoft_learn(f"{cert_id} exam skills measured practice questions")
+
+    # External tool: Query knowledge base
+    kb_results = query_knowledge_base(f"{cert_id} assessment readiness criteria")
+
     cert_info = json.dumps(cert, indent=2) if cert else "Certification not found."
-    return f"TARGET CERTIFICATION [source: semantic_model.json, section: certifications]:\n{cert_info}{learner_info}\n\nKNOWLEDGE BASE (Foundry IQ - Permission-Aware Retrieval):\n[source: engineering_certification_guide.md]\n{cert_guide}"
+    return (
+        f"TARGET CERTIFICATION [source: semantic_model.json, section: certifications]:\n{cert_info}"
+        f"{learner_info}\n\n"
+        f"KNOWLEDGE BASE (Foundry IQ - Permission-Aware Retrieval):\n"
+        f"[source: engineering_certification_guide.md]\n{cert_guide}\n\n"
+        f"EXTERNAL TOOL — Microsoft Learn Search:\n{learn_results}\n\n"
+        f"EXTERNAL TOOL — Foundry IQ Knowledge Base:\n{kb_results}"
+    )
 
 
 def build_manager_context(context: dict) -> str:
@@ -533,4 +565,56 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser(description="SkillSentinel Multi-Agent System")
+    parser.add_argument("--serve", action="store_true", help="Run as HTTP server (Hosted Agent mode)")
+    parser.add_argument("--port", type=int, default=8088, help="Server port (default: 8088)")
+    args = parser.parse_args()
+
+    if args.serve:
+        # Hosted Agent mode: HTTP server on port 8088
+        from starlette.applications import Starlette
+        from starlette.requests import Request
+        from starlette.responses import JSONResponse, Response
+        from starlette.routing import Route
+        import uvicorn
+
+        _client = get_client()
+        _context = {"employee_id": None, "team_id": None, "certification": None, "role": None}
+
+        async def handle_responses(request: Request) -> Response:
+            body = await request.json()
+            input_data = body.get("input", [])
+            user_message = ""
+            if isinstance(input_data, str):
+                user_message = input_data
+            elif isinstance(input_data, list):
+                for msg in input_data:
+                    if isinstance(msg, dict) and msg.get("role") == "user":
+                        content = msg.get("content", "")
+                        user_message = content if isinstance(content, str) else str(content)
+            if not user_message:
+                return JSONResponse({"error": "No user message"}, status_code=400)
+
+            response_text = run_pipeline(_client, user_message, _context)
+            return JSONResponse({
+                "id": f"resp-{hash(user_message) % 100000}",
+                "object": "response",
+                "output_text": response_text,
+            })
+
+        async def handle_health(request: Request) -> Response:
+            return JSONResponse({"status": "healthy", "agent": "skillsentinel-dispatcher"})
+
+        app = Starlette(routes=[
+            Route("/responses", handle_responses, methods=["POST"]),
+            Route("/health", handle_health, methods=["GET"]),
+        ])
+
+        print(f"\n  SkillSentinel — Hosted Agent Mode")
+        print(f"  Listening on http://0.0.0.0:{args.port}")
+        print(f"  POST /responses | GET /health\n")
+        uvicorn.run(app, host="0.0.0.0", port=args.port)
+    else:
+        # Interactive terminal mode
+        main()

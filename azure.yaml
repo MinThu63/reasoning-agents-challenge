@@ -1,0 +1,52 @@
+name: skillsentinel
+metadata:
+  template: skillsentinel-multi-agent
+
+services:
+  skillsentinel-agent:
+    host: ai.agent
+    project: .
+    language: python
+    startupCommand: python main.py --serve
+    config:
+      agent:
+        kind: hosted
+        name: skillsentinel-dispatcher
+        description: |
+          SkillSentinel: Multi-agent enterprise certification readiness system
+          with 8 specialized agents, Chain-of-Thought reasoning, source-grounding,
+          and governance pipeline. Integrates Foundry IQ, Fabric IQ, and Work IQ.
+        metadata:
+          tags:
+            - Multi-Agent
+            - Enterprise Learning
+            - Reasoning Agents
+            - Foundry IQ
+            - Fabric IQ
+            - Work IQ
+            - Chain-of-Thought
+            - ADORE RAG
+        protocols:
+          - protocol: responses
+        environment_variables:
+          - name: AZURE_AI_PROJECT_ENDPOINT
+            value: ${AZURE_AI_PROJECT_ENDPOINT}
+          - name: AZURE_AI_MODEL_DEPLOYMENT
+            value: ${AZURE_AI_MODEL_DEPLOYMENT}
+          - name: AZURE_AI_API_KEY
+            value: ${AZURE_AI_API_KEY}
+          - name: AZURE_SEARCH_ENDPOINT
+            value: ${AZURE_SEARCH_ENDPOINT}
+          - name: AZURE_SEARCH_API_KEY
+            value: ${AZURE_SEARCH_API_KEY}
+          - name: AZURE_SEARCH_INDEX
+            value: ${AZURE_SEARCH_INDEX}
+    deployments:
+      - name: gpt-oss-120b
+        model:
+          name: gpt-oss-120b
+          format: OpenAI
+          version: "1"
+        sku:
+          name: GlobalStandard
+          capacity: 10

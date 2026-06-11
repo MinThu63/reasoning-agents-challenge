@@ -1,0 +1,29 @@
+kind: hosted
+name: skillsentinel-dispatcher
+description: |
+  SkillSentinel: Multi-agent enterprise certification readiness system.
+  8 specialized agents with Chain-of-Thought reasoning, ADORE RAG retrieval,
+  source-grounding mandates, and a governance pipeline (Policy Guard + Verifier).
+  Integrates all three Microsoft IQ layers: Foundry IQ (Azure AI Search),
+  Fabric IQ (semantic model), and Work IQ (employee work signals).
+metadata:
+  tags:
+    - Multi-Agent
+    - Enterprise Learning
+    - Reasoning Agents
+    - Microsoft Foundry
+protocols:
+  - protocol: responses
+environment_variables:
+  - name: AZURE_AI_PROJECT_ENDPOINT
+    value: ${AZURE_AI_PROJECT_ENDPOINT}
+  - name: AZURE_AI_MODEL_DEPLOYMENT
+    value: ${AZURE_AI_MODEL_DEPLOYMENT}
+  - name: AZURE_AI_API_KEY
+    value: ${AZURE_AI_API_KEY}
+  - name: AZURE_SEARCH_ENDPOINT
+    value: ${AZURE_SEARCH_ENDPOINT}
+  - name: AZURE_SEARCH_API_KEY
+    value: ${AZURE_SEARCH_API_KEY}
+  - name: AZURE_SEARCH_INDEX
+    value: ${AZURE_SEARCH_INDEX}

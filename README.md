@@ -24,6 +24,9 @@ pip install -r requirements.txt
 # AZURE_AI_PROJECT_ENDPOINT=https://your-resource.services.ai.azure.com/api/projects/your-project
 # AZURE_AI_MODEL_DEPLOYMENT=gpt-oss-120b
 # AZURE_AI_API_KEY=your-key
+# AZURE_SEARCH_ENDPOINT=https://your-search-resource.search.windows.net
+# AZURE_SEARCH_API_KEY=your-search-key
+# AZURE_SEARCH_INDEX=your-index-name
 
 # 5. Run the interactive demo
 python main.py
@@ -127,11 +130,96 @@ USER REQUEST
 
 ## IQ Layer Integration
 
-| Layer | What It Provides | Data Source |
-|-------|------------------|-------------|
-| **Foundry IQ** | Grounded knowledge retrieval (company docs) | `docs/engineering_certification_guide.md` |
-| **Fabric IQ** | Semantic business model (roles, certs, rules) | `data/semantic_model.json` |
-| **Work IQ** | Employee work patterns and calendar signals | `data/work_activity_signals.json` |
+All three Microsoft IQ layers are actively integrated — Foundry IQ connects to a live Azure AI Search knowledge base, while Fabric IQ and Work IQ are served from structured synthetic data files that model the semantic business layer.
+
+### Foundry IQ — Grounded Enterprise Knowledge
+
+**What it is:** The company's knowledge library. Provides permission-aware, cited retrieval from approved organizational documents.
+
+**How we integrate it:**
+- **Azure AI Search** (live connection): The `query_knowledge_base()` tool in `agents/tools.py` queries the `learning-path-curator-resource` Azure AI Search index in real-time. Documents are indexed from Azure Blob Storage (`learningcertstorage`).
+- **Local document grounding**: The Engineering Certification Guide (`docs/engineering_certification_guide.md`) is loaded directly into agent context with permission-aware filtering by role.
+- **Microsoft Learn Search** (live API): The `search_microsoft_learn()` tool fetches real-time results from Microsoft Learn documentation.
+
+**Used by:** Learning Path Curator, Assessment Agent
+
+**Data sources:**
+| Source | Type | Connection |
+|--------|------|------------|
+| Azure AI Search index (`ks-azureblob-135-index`) | Live API | `AZURE_SEARCH_ENDPOINT` + `AZURE_SEARCH_API_KEY` |
+| Microsoft Learn Search API | Live API | Public, no auth required |
+| `docs/engineering_certification_guide.md` | Local file | Loaded into agent context |
+| `docs/corporate_learning_policy.md` | Local file | Policy grounding |
+
+---
+
+### Fabric IQ — Semantic Business Data Layer
+
+**What it is:** The structured business meaning layer. Models the relationships between roles, certifications, skills, teams, and business rules into a unified semantic model.
+
+**How we integrate it:**
+- `data/semantic_model.json` contains the full Fabric IQ semantic layer with:
+  - 4 roles with certification mappings and core skills
+  - 9 certifications with prerequisites, study hours, pass thresholds, and difficulty levels
+  - 5 teams with headcount, meeting averages, and pass rate benchmarks
+  - Business rules (meeting thresholds, study targets, exam approval criteria)
+  - Study plan templates with week-by-week milestones and target scores
+- Agents query this structured data to make grounded decisions (e.g., "Is this employee at risk?" uses the `critical_meeting_threshold` rule)
+
+**Used by:** Study Plan Generator, Manager Insights Agent, Assessment Agent (scoring thresholds)
+
+---
+
+### Work IQ — Work Context and Behavior Signals
+
+**What it is:** Intelligence about how employees actually work — meeting patterns, focus hours, collaboration load, and calendar structure.
+
+**How we integrate it:**
+- `data/work_activity_signals.json` contains 18 employee work profiles with:
+  - Meeting hours per week
+  - Focus hours per week
+  - Deep work blocks available
+  - Preferred learning time slot (Morning/Afternoon/Evening)
+  - Calendar fragmentation score (Low/Medium/High)
+  - Average collaboration messages per day
+  - Current certification target
+- `data/learner_performance.json` contains learning outcomes (practice scores, hours studied, exam results)
+- The Engagement Agent uses these signals to schedule reminders in safe windows
+- The Study Plan Generator uses them to detect capacity risks and adjust timelines
+
+**Used by:** Engagement Agent, Study Plan Generator, Manager Insights Agent
+
+---
+
+## External Tools & API Integration
+
+The system integrates two external tools that extend agent capabilities beyond local data:
+
+### Microsoft Learn Search API
+- **What:** Real-time search of Microsoft's official documentation and certification study guides
+- **How:** HTTP GET to `https://learn.microsoft.com/api/search` with query parameters
+- **Auth:** None required (public API)
+- **Used by:** Learning Path Curator (finds study resources), Assessment Agent (grounds questions in official content)
+- **Code:** `agents/tools.py → search_microsoft_learn()`
+
+### Azure AI Search (Foundry IQ Knowledge Base)
+- **What:** Queries the organization's indexed knowledge base hosted on Azure AI Search
+- **How:** HTTP POST to the search index with keyword search
+- **Auth:** API key (`AZURE_SEARCH_API_KEY`)
+- **Index:** `ks-azureblob-135-index` containing 15 indexed documents from Azure Blob Storage
+- **Used by:** Learning Path Curator, Assessment Agent
+- **Code:** `agents/tools.py → query_knowledge_base()`
+
+### Tool Integration Architecture
+```
+Agent (needs external knowledge)
+    ↓
+Context Builder in main.py
+    ├── search_microsoft_learn(query) → Microsoft Learn API → results injected into prompt
+    └── query_knowledge_base(query)  → Azure AI Search API → results injected into prompt
+    ↓
+Agent receives enriched context with external data + citations
+```
 
 ---
 
@@ -149,8 +237,11 @@ Every agent enforces these 4 rules (defined in `agents/base.py`):
 ## Project Structure
 
 ```
-├── main.py                          ← Entry point (interactive demo + full pipeline)
+├── main.py                          ← Entry point (interactive + server mode)
 ├── test_scenarios.py                ← Evaluation framework (8 test cases)
+├── Dockerfile                       ← Container packaging for Hosted Agent
+├── azure.yaml                       ← Azure Developer CLI deployment config
+├── agent.manifest.yaml              ← Foundry Agent Service manifest
 ├── agents/
 │   ├── __init__.py
 │   ├── base.py                      ← Universal constraints (house rules)
@@ -161,7 +252,8 @@ Every agent enforces these 4 rules (defined in `agents/base.py`):
 │   ├── assessment_agent.py          ← Agent 5: Foundry IQ
 │   ├── manager_insights_agent.py    ← Agent 6: Fabric IQ + Work IQ
 │   ├── policy_guard.py              ← Agent 7: Safety
-│   └── verifier.py                  ← Agent 8: Quality
+│   ├── verifier.py                  ← Agent 8: Quality
+│   └── tools.py                     ← External tool integrations (Microsoft Learn + Azure AI Search)
 ├── data/
 │   ├── semantic_model.json          ← Fabric IQ (roles, certs, rules, templates)
 │   ├── work_activity_signals.json   ← Work IQ (18 employees)
@@ -173,7 +265,7 @@ Every agent enforces these 4 rules (defined in `agents/base.py`):
 │   ├── challengeDetails.md          ← Challenge requirements
 │   └── newPlan.md                   ← Architecture design document
 ├── audit_logs/                      ← Auto-generated pipeline audit trails
-├── requirements.txt                 ← python-dotenv, openai
+├── requirements.txt                 ← python-dotenv, openai, httpx
 ├── .env                             ← Azure credentials (not committed)
 └── .gitignore
 ```
@@ -450,9 +542,15 @@ main.py:run_pipeline()
 ### Environment variables (.env)
 
 ```
+# Microsoft Foundry Model Endpoint
 AZURE_AI_PROJECT_ENDPOINT=https://your-resource.services.ai.azure.com/api/projects/your-project
 AZURE_AI_MODEL_DEPLOYMENT=gpt-oss-120b
 AZURE_AI_API_KEY=your-api-key
+
+# Azure AI Search (Foundry IQ Knowledge Base)
+AZURE_SEARCH_ENDPOINT=https://your-search-resource.search.windows.net
+AZURE_SEARCH_API_KEY=your-search-api-key
+AZURE_SEARCH_INDEX=your-index-name
 ```
 
 ---
@@ -461,19 +559,98 @@ AZURE_AI_API_KEY=your-api-key
 
 | Criterion | Score Weight | How We Address It |
 |-----------|-------------|-------------------|
-| Accuracy & Relevance | 25% | Source-grounding mandate, Foundry IQ retrieval, Fabric IQ business rules |
-| Reasoning & Multi-step Thinking | 25% | CoT in all agents, agent chaining, ARM routing, self-consistency verification |
-| Creativity & Originality | 15% | 8-agent pipeline with governance layer, ADORE RAG, research-backed design |
-| User Experience & Presentation | 15% | Natural language responses, clear pipeline feedback, audit command |
-| Reliability & Safety | 20% | Policy Guard (5-layer), Verifier, human approval gates, anti-extrapolation guards |
+| Accuracy & Relevance | 25% | Source-grounding mandate, live Foundry IQ retrieval via Azure AI Search, Fabric IQ business rules, Microsoft Learn API for real-time content |
+| Reasoning & Multi-step Thinking | 25% | CoT in all agents, agent chaining, ARM routing, self-consistency verification, abductive/analogical/nonmonotonic reasoning |
+| Creativity & Originality | 15% | 8-agent pipeline with governance layer, ADORE RAG, 10 research-backed reasoning patterns, audit trail system |
+| User Experience & Presentation | 15% | Natural language responses, clear pipeline feedback, human approval gates, `audit` command |
+| Reliability & Safety | 20% | Policy Guard (5-layer), Verifier, human approval gates, anti-extrapolation guards, permission-aware retrieval |
 
 ---
 
 ## Known Limitations
 
-- **Knowledge base connection:** Foundry IQ knowledge base has auth issues due to Azure for Students subscription region restrictions. Grounding is achieved through local document loading in agent prompts. In production with a standard subscription, Foundry IQ would provide cited retrieval directly.
-- **Latency:** Each request makes 3-4 LLM calls (routing + agent + guard + verifier). Complex chains add more. Average response time is 7-10 seconds per request.
-- **Model:** Uses `gpt-oss-120b` which may not always produce perfectly structured JSON. A gpt-4o deployment would improve structured output reliability.
+- **Hosted Agent deployment:** Azure for Students subscription disables the Azure CLI application (AADSTS7000112), preventing `azd auth login`. The Dockerfile, azure.yaml, and agent.manifest.yaml are included and deployment-ready for a standard Azure subscription.
+- **Latency:** Each request makes 3-4 LLM calls (routing + agent + guard + verifier) plus external API calls. Complex chains add more. Average response time is 10-15 seconds per request.
+- **Model:** Uses `gpt-oss-120b` which may not always produce perfectly structured output. A gpt-4o deployment would improve reliability and support tool-calling natively.
+- **Azure AI Search:** The knowledge base uses keyword search (not semantic search) due to index configuration. In a production setup, semantic ranking would improve retrieval relevance.
+- **Work IQ simulation:** Work IQ signals are served from a local JSON file rather than connected to Microsoft 365 Graph API. In production, this would pull real calendar and collaboration data via the Microsoft Graph connector.
+
+---
+
+## Hosted Agent Deployment (Production-Ready)
+
+The system is fully prepared for deployment as a **Foundry Hosted Agent**. All deployment artifacts are included:
+
+### Deployment Files
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile` | Packages the agent as a container (Python 3.12, port 8088) |
+| `azure.yaml` | Azure Developer CLI deployment configuration |
+| `agent.manifest.yaml` | Foundry Agent Service registration manifest |
+
+### Deployment Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│  Azure Container Registry                           │
+│  ┌───────────────────────────────────────────────┐  │
+│  │  skillsentinel:latest (Docker image)          │  │
+│  │  • Python 3.12 + dependencies                │  │
+│  │  • main.py --serve (HTTP mode)               │  │
+│  │  • agents/ + data/ + docs/                   │  │
+│  └───────────────────────────────────────────────┘  │
+└─────────────────────┬───────────────────────────────┘
+                      ↓ Foundry Agent Service pulls image
+┌─────────────────────────────────────────────────────┐
+│  Foundry Agent Service (Managed Runtime)            │
+│  • Provisions compute + Entra ID agent identity     │
+│  • Exposes /responses endpoint                      │
+│  • Handles scaling, session state, observability    │
+│  • Injects APPLICATIONINSIGHTS_CONNECTION_STRING    │
+└─────────────────────┬───────────────────────────────┘
+                      ↓
+              https://[project].services.ai.azure.com/
+              api/projects/[project]/agents/skillsentinel-dispatcher
+```
+
+### How to Deploy (with standard Azure subscription)
+
+```powershell
+# 1. Login
+azd auth login
+
+# 2. Install Foundry extension
+azd ext install microsoft.foundry
+
+# 3. Provision Azure resources
+azd provision
+
+# 4. Build container and deploy
+azd deploy
+
+# 5. Test the deployed agent
+azd ai agent invoke "What certifications should a Cloud Engineer get?"
+```
+
+### Running in Server Mode Locally
+
+```powershell
+# Start as HTTP server (same mode used in container)
+python main.py --serve
+
+# Test with curl
+curl -X POST http://localhost:8088/responses -H "Content-Type: application/json" -d "{\"input\": \"What certs for a Cloud Engineer?\"}"
+
+# Health check
+curl http://localhost:8088/health
+```
+
+### Why Deployment Was Not Completed
+
+The Azure for Students subscription disables the Azure CLI enterprise application (App ID: `04b07795-8ddb-461a-bbee-02f9e1bf7b46`), which is required for `azd auth login`. This is a tenant-level restriction that cannot be resolved without administrator access. Error: `AADSTS7000112: Application 'Microsoft Azure CLI' is disabled.`
+
+The codebase is fully deployment-ready. With a standard pay-as-you-go or enterprise Azure subscription, deployment would complete in under 5 minutes using the commands above.
 
 ---
 
