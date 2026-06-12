@@ -179,14 +179,6 @@ for idx, message in enumerate(st.session_state.messages):
             with st.expander("🔍 Reasoning Pipeline", expanded=False):
                 for step in message["pipeline_steps"]:
                     st.markdown(f'<div class="pipeline-step">{step}</div>', unsafe_allow_html=True)
-        # Show follow-up suggestions after the LAST assistant message only
-        if message["role"] == "assistant" and idx == len(st.session_state.messages) - 1:
-            st.markdown("")  # spacing
-            render_suggestions(
-                message.get("agent_key", "general"),
-                message.get("content", ""),
-                st.session_state.context
-            )
 
 
 # ============================================================
@@ -316,141 +308,8 @@ def run_streamlit_pipeline(user_message: str, status_container) -> dict:
 
 
 # ============================================================
-# Follow-up Suggestions
+# Chat Input
 # ============================================================
-
-FOLLOW_UP_MAP = {
-    "learning_path": [
-        "Create a study plan for this path",
-        "What are the prerequisites I need?",
-        "Give me practice questions to test readiness",
-    ],
-    "study_plan": [
-        "Set up study reminders for me",
-        "Am I ready for the exam yet?",
-        "Show me my team's progress",
-    ],
-    "engagement": [
-        "Give me practice questions now",
-        "Update my study plan",
-        "How is my team performing?",
-    ],
-    "assessment": [
-        "Revise my study plan based on weak areas",
-        "What topics should I focus on next?",
-        "Set up reminders for extra study",
-    ],
-    "manager_insights": [
-        "Which team needs the most help?",
-        "Create a study plan for the at-risk team",
-        "What certifications does this team need?",
-    ],
-    "general": [
-        "What certs should a Cloud Engineer get?",
-        "Create a study plan for EMP-034",
-        "How is TEAM-D performing?",
-    ],
-    "chain": [
-        "Am I ready for the exam?",
-        "Show me my team's progress",
-        "Give me practice questions",
-    ],
-}
-
-
-def get_dynamic_suggestions(agent_key: str, response_text: str, context: dict) -> list:
-    """Generate context-aware follow-up suggestions based on the response content."""
-    suggestions = []
-
-    # Extract cert mentions from response
-    cert_codes = []
-    for code in ["AZ-104", "AZ-204", "AZ-305", "AZ-400", "AZ-500", "DP-100", "DP-203", "DP-300", "SC-200"]:
-        if code in response_text:
-            cert_codes.append(code)
-
-    # Extract employee mentions
-    emp_id = context.get("employee_id")
-
-    # Build contextual suggestions
-    if agent_key == "learning_path":
-        if cert_codes:
-            suggestions.append(f"Create a study plan for {cert_codes[0]}")
-            suggestions.append(f"Give me practice questions for {cert_codes[0]}")
-        suggestions.append("What are the prerequisites I need?")
-
-    elif agent_key == "study_plan":
-        if emp_id:
-            suggestions.append(f"When should {emp_id} study this week?")
-        suggestions.append("Am I ready for the exam?")
-        suggestions.append("How is my team performing?")
-
-    elif agent_key == "engagement":
-        suggestions.append("Give me practice questions")
-        if emp_id:
-            suggestions.append(f"Create a study plan for {emp_id}")
-        suggestions.append("How is my team doing?")
-
-    elif agent_key == "assessment":
-        suggestions.append("Revise my study plan based on weak areas")
-        if cert_codes:
-            suggestions.append(f"What resources should I study for {cert_codes[0]}?")
-        suggestions.append("Set up study reminders for me")
-
-    elif agent_key == "manager_insights":
-        suggestions.append("Which team needs the most help?")
-        suggestions.append("Create study plans for the at-risk team")
-        if cert_codes:
-            suggestions.append(f"What does the team need for {cert_codes[0]}?")
-        else:
-            suggestions.append("What certifications does this team need?")
-
-    elif agent_key == "chain":
-        suggestions.append("Am I ready for the exam?")
-        suggestions.append("Show me my team's progress")
-        if cert_codes:
-            suggestions.append(f"Give me practice questions for {cert_codes[0]}")
-        else:
-            suggestions.append("Give me practice questions")
-
-    else:
-        suggestions = FOLLOW_UP_MAP.get(agent_key, FOLLOW_UP_MAP["general"])
-
-    return suggestions[:3]
-
-STARTER_PROMPTS = [
-    "What certs should a Cloud Engineer get?",
-    "Create a study plan for EMP-034",
-    "Help me prepare for AZ-204",
-    "How is TEAM-D performing?",
-    "Give me practice questions for AZ-400",
-    "When should EMP-056 study this week?",
-]
-
-
-def render_suggestions(agent_key: str, response_text: str = "", context: dict = None):
-    """Render clickable follow-up suggestion buttons based on response context."""
-    suggestions = get_dynamic_suggestions(agent_key, response_text, context or {})
-    cols = st.columns(len(suggestions))
-    for i, suggestion in enumerate(suggestions):
-        with cols[i]:
-            if st.button(f"💬 {suggestion}", key=f"sug_{i}_{hash(suggestion) % 10000}", use_container_width=True):
-                st.session_state["next_input"] = suggestion
-                st.rerun()
-
-# ============================================================
-# Chat Input & Suggestions
-# ============================================================
-
-# Show starter prompts if chat is empty
-if not st.session_state.messages:
-    st.markdown("**Try one of these to get started:**")
-    cols = st.columns(3)
-    for i, prompt_text in enumerate(STARTER_PROMPTS):
-        with cols[i % 3]:
-            if st.button(prompt_text, key=f"start_{i}", use_container_width=True):
-                st.session_state["next_input"] = prompt_text
-                st.rerun()
-    st.markdown("---")
 
 prompt = st.chat_input("Ask SkillSentinel anything about certifications...")
 
