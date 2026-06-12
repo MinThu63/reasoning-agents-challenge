@@ -101,22 +101,42 @@ USER REQUEST
 **Chain trigger keywords:** `prepare`, `full plan`, `help me get ready`, `end to end`, `am i ready`, `readiness check`, `should i take the exam`
 
 **Why chaining matters:** The Study Plan Generator can't build a schedule without knowing which skill domains to cover (Curator's job). The Engagement Agent can't schedule reminders without a plan to attach them to (Study Plan's job). Each agent's output becomes the next agent's input.
-                 ↓
+
+### Governance Pipeline (runs on every response)
+
+After the specialist agent (or chain) produces output, it passes through two governance gates before reaching the user:
+
+```
+Agent Output
+     ↓
 ┌──────────────────────────────────────────┐
 │  🛡️ Policy Guard (5-Layer)              │
-│  PII · Credentials · Grounding ·        │
-│  Injection · Scope                       │
-├──────────────────────────────────────────┤
+│                                          │
+│  Layer 1: PII Scan          → BLOCK      │
+│  Layer 2: Credential Scan   → BLOCK      │
+│  Layer 3: Grounding Check   → FLAG       │
+│  Layer 4: Injection Detect  → BLOCK      │
+│  Layer 5: Scope Compliance  → BLOCK      │
+└────────────────┬─────────────────────────┘
+                 ↓ (if CLEARED)
+┌──────────────────────────────────────────┐
 │  ✅ Verifier (Adaptive Thresholds)       │
-│  Citation ≥85% · Completeness ·          │
-│  Consistency · Assumption Audit          │
-│  → REVISE loop if fails                  │
+│                                          │
+│  Assessment: ≥90% citations required     │
+│  Plans/Curator: ≥85%                     │
+│  Manager: ≥80%                           │
+│  Engagement: ≥70%                        │
+│                                          │
+│  If FAILS → auto REVISE (re-call agent)  │
+│  If PASSES → APPROVED                    │
 └────────────────┬─────────────────────────┘
                  ↓
-         📋 Audit Trail → audit_logs/
+         📋 Audit Trail saved to audit_logs/
                  ↓
-         Final Response → User
+         ✅ Final Response → User
 ```
+
+Every pipeline run produces a full JSON audit log with: routing decision, agent calls, governance verdicts, timestamps, and timing.
 
 ---
 
