@@ -28,27 +28,20 @@ Most multi-agent systems in this challenge will implement 3-5 agents that call a
 
 ---
 
-## Submission Requirements — How We Meet Each One
+## Submission Requirements Met
 
-| Requirement | How SkillSentinel Addresses It | Evidence |
-|---|---|---|
-| **Multi-agent system aligned to challenge scenario** | 8 specialized agents covering the full certification lifecycle: path curation, study planning, engagement, assessment, team analytics, safety, and quality verification | `agents/` directory — 8 agent files |
-| **Use Microsoft Foundry (UI or SDK)** | Model inference via Microsoft Foundry endpoint (`gpt-oss-120b`). Azure AI Search (Foundry IQ) for knowledge base retrieval. Deployment files for Foundry Agent Service. | `.env` → `AZURE_AI_PROJECT_ENDPOINT`, `agents/tools.py` → live API calls |
-| **Demonstrate reasoning and multi-step decision-making** | 10 reasoning techniques implemented (CoT, ADORE RAG, abductive, analogical, nonmonotonic, deductive, self-consistency, ARM routing, layered-CoT, few-shot). Multi-agent chaining for complex requests. | `agents/base.py` → universal constraints, each agent file → STEP 1→4 scaffolding |
-| **Integrate external tools, APIs, and/or MCP** | Microsoft Learn Search API (live, public). Azure AI Search API (live, authenticated). Both return real data injected into agent context. | `agents/tools.py` → `search_microsoft_learn()`, `query_knowledge_base()` |
-| **Integrate at least one Microsoft IQ layer** | All three IQ layers: Foundry IQ (Azure AI Search + docs), Fabric IQ (semantic_model.json), Work IQ (work_activity_signals.json) | Context builders in `main.py`, data files in `data/` |
-| **Use synthetic data and documents only** | All employee IDs, team names, learner records, and documents are clearly synthetic. README states this explicitly. | `data/` directory, docs, disclaimer at top |
-| **Be demoable** | `python main.py` starts interactive demo. Pipeline status shows in real-time. Audit trail viewable via `audit` command. | `main.py` → `main()` function |
-| **Clear documentation** | This README: architecture diagrams, per-agent specs, IQ layer details, reasoning technique explanations, deployment docs | This file |
-
-**Highly Valued Extras:**
-
-| Extra | How We Address It |
+| Requirement | ✅ |
 |---|---|
-| Evaluations & telemetry | `test_scenarios.py` — 13 automated test cases (8 functional + 5 red-team adversarial) with scoring |
-| Advanced reasoning patterns | 10 techniques with research citations (see Reasoning Techniques section) |
-| Responsible AI controls | Policy Guard (5-layer), source-grounding mandate, anti-extrapolation guard, PII blocking, prompt injection detection |
-| Hosted deployment story | Dockerfile + azure.yaml + agent.manifest.yaml + server mode. Documented blocker (Azure Student subscription) |
+| Multi-agent system aligned to challenge scenario | 8 agents covering the full certification lifecycle |
+| Use Microsoft Foundry (UI or SDK) | Model inference via Foundry endpoint + Azure AI Search (Foundry IQ) |
+| Demonstrate reasoning and multi-step decision-making | 10 reasoning techniques + multi-agent chaining |
+| Integrate external tools, APIs, and/or MCP | Microsoft Learn API (live) + Azure AI Search API (live) |
+| Integrate at least one Microsoft IQ layer | All three: Foundry IQ, Fabric IQ, Work IQ |
+| Use synthetic data and documents only | All data clearly synthetic |
+| Be demoable | `python main.py` — interactive terminal demo |
+| Clear documentation | This README |
+
+**Extras:** Evaluation framework (13 tests including red-team), audit trail, hosted deployment files, Responsible AI controls.
 
 ---
 
