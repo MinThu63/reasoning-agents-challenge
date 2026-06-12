@@ -313,24 +313,24 @@ def run_streamlit_pipeline(user_message: str, status_container) -> dict:
 
 FOLLOW_UP_MAP = {
     "learning_path": [
-        "Create a study plan for this certification",
-        "What are the prerequisites?",
-        "Give me practice questions for this cert",
+        "Create a study plan for this path",
+        "What are the prerequisites I need?",
+        "Give me practice questions to test readiness",
     ],
     "study_plan": [
-        "When should I study this week?",
-        "Am I ready for the exam?",
-        "How is my team performing?",
+        "Set up study reminders for me",
+        "Am I ready for the exam yet?",
+        "Show me my team's progress",
     ],
     "engagement": [
-        "Give me practice questions",
-        "Create a study plan for me",
-        "How is my team doing?",
+        "Give me practice questions now",
+        "Update my study plan",
+        "How is my team performing?",
     ],
     "assessment": [
-        "Create a study plan to improve",
-        "What topics should I focus on?",
-        "When should I study this week?",
+        "Revise my study plan based on weak areas",
+        "What topics should I focus on next?",
+        "Set up reminders for extra study",
     ],
     "manager_insights": [
         "Which team needs the most help?",
@@ -344,10 +344,70 @@ FOLLOW_UP_MAP = {
     ],
     "chain": [
         "Am I ready for the exam?",
-        "How is my team doing?",
+        "Show me my team's progress",
         "Give me practice questions",
     ],
 }
+
+
+def get_dynamic_suggestions(agent_key: str, response_text: str, context: dict) -> list:
+    """Generate context-aware follow-up suggestions based on the response content."""
+    suggestions = []
+
+    # Extract cert mentions from response
+    cert_codes = []
+    for code in ["AZ-104", "AZ-204", "AZ-305", "AZ-400", "AZ-500", "DP-100", "DP-203", "DP-300", "SC-200"]:
+        if code in response_text:
+            cert_codes.append(code)
+
+    # Extract employee mentions
+    emp_id = context.get("employee_id")
+
+    # Build contextual suggestions
+    if agent_key == "learning_path":
+        if cert_codes:
+            suggestions.append(f"Create a study plan for {cert_codes[0]}")
+            suggestions.append(f"Give me practice questions for {cert_codes[0]}")
+        suggestions.append("What are the prerequisites I need?")
+
+    elif agent_key == "study_plan":
+        if emp_id:
+            suggestions.append(f"When should {emp_id} study this week?")
+        suggestions.append("Am I ready for the exam?")
+        suggestions.append("How is my team performing?")
+
+    elif agent_key == "engagement":
+        suggestions.append("Give me practice questions")
+        if emp_id:
+            suggestions.append(f"Create a study plan for {emp_id}")
+        suggestions.append("How is my team doing?")
+
+    elif agent_key == "assessment":
+        suggestions.append("Revise my study plan based on weak areas")
+        if cert_codes:
+            suggestions.append(f"What resources should I study for {cert_codes[0]}?")
+        suggestions.append("Set up study reminders for me")
+
+    elif agent_key == "manager_insights":
+        suggestions.append("Which team needs the most help?")
+        suggestions.append("Create study plans for the at-risk team")
+        if cert_codes:
+            suggestions.append(f"What does the team need for {cert_codes[0]}?")
+        else:
+            suggestions.append("What certifications does this team need?")
+
+    elif agent_key == "chain":
+        suggestions.append("Am I ready for the exam?")
+        suggestions.append("Show me my team's progress")
+        if cert_codes:
+            suggestions.append(f"Give me practice questions for {cert_codes[0]}")
+        else:
+            suggestions.append("Give me practice questions")
+
+    else:
+        suggestions = FOLLOW_UP_MAP.get(agent_key, FOLLOW_UP_MAP["general"])
+
+    return suggestions[:3]
 
 STARTER_PROMPTS = [
     "What certs should a Cloud Engineer get?",
@@ -359,13 +419,13 @@ STARTER_PROMPTS = [
 ]
 
 
-def render_suggestions(agent_key: str):
-    """Render clickable follow-up suggestion buttons."""
-    suggestions = FOLLOW_UP_MAP.get(agent_key, FOLLOW_UP_MAP["general"])
+def render_suggestions(agent_key: str, response_text: str = "", context: dict = None):
+    """Render clickable follow-up suggestion buttons based on response context."""
+    suggestions = get_dynamic_suggestions(agent_key, response_text, context or {})
     cols = st.columns(len(suggestions))
     for i, suggestion in enumerate(suggestions):
         with cols[i]:
-            if st.button(f"💬 {suggestion}", key=f"sug_{suggestion[:15]}_{time.time()}", use_container_width=True):
+            if st.button(f"💬 {suggestion}", key=f"sug_{i}_{hash(suggestion) % 10000}", use_container_width=True):
                 st.session_state["next_input"] = suggestion
                 st.rerun()
 
@@ -386,8 +446,10 @@ if not st.session_state.messages:
 
 # Show follow-up suggestions after last response
 elif st.session_state.messages and st.session_state.messages[-1]["role"] == "assistant":
-    last_agent = st.session_state.messages[-1].get("agent_key", "general")
-    render_suggestions(last_agent)
+    last_msg = st.session_state.messages[-1]
+    last_agent = last_msg.get("agent_key", "general")
+    last_response = last_msg.get("content", "")
+    render_suggestions(last_agent, last_response, st.session_state.context)
 
 prompt = st.chat_input("Ask SkillSentinel anything about certifications...")
 
