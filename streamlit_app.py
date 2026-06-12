@@ -124,12 +124,21 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("**Chats**")
-    for chat_name in st.session_state.chats:
+    for chat_name in list(st.session_state.chats.keys()):
         is_active = chat_name == st.session_state.active_chat
-        label = f"💬 **{chat_name}**" if is_active else f"💬 {chat_name}"
-        if st.button(label, key=f"chat_{chat_name}", use_container_width=True):
-            st.session_state.active_chat = chat_name
-            st.rerun()
+        col_chat, col_del = st.columns([4, 1])
+        with col_chat:
+            label = f"**{chat_name}**" if is_active else chat_name
+            if st.button(f"💬 {label}", key=f"chat_{chat_name}", use_container_width=True):
+                st.session_state.active_chat = chat_name
+                st.rerun()
+        with col_del:
+            if len(st.session_state.chats) > 1:
+                if st.button("🗑️", key=f"del_{chat_name}"):
+                    del st.session_state.chats[chat_name]
+                    if st.session_state.active_chat == chat_name:
+                        st.session_state.active_chat = list(st.session_state.chats.keys())[0]
+                    st.rerun()
 
     st.divider()
 
