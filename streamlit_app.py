@@ -123,23 +123,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Context display
-    st.markdown("**Active Context**")
-    if "context" in st.session_state:
-        ctx = st.session_state.context
-        if ctx.get("employee_id"):
-            st.markdown(f"👤 Employee: `{ctx['employee_id']}`")
-        if ctx.get("team_id"):
-            st.markdown(f"👥 Team: `{ctx['team_id']}`")
-        if ctx.get("certification"):
-            st.markdown(f"📜 Cert: `{ctx['certification']}`")
-        if not any([ctx.get("employee_id"), ctx.get("team_id"), ctx.get("certification")]):
-            st.markdown("_No context yet — ask a question_")
-    else:
-        st.markdown("_No context yet_")
-
-    st.divider()
-
     st.markdown("**Try these:**")
     example_prompts = [
         "What certs should a Cloud Engineer get?",
