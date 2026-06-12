@@ -97,16 +97,97 @@ USER REQUEST
 
 ## 🤖 The 8 Agents
 
-| # | Agent | What It Does | IQ Layer |
-|---|-------|---|---|
-| 1 | 🎯 Mission Control | Routes with confidence scoring. Chains agents for complex requests. Asks for clarification when unsure. | — |
-| 2 | 📚 Learning Path Curator | Maps roles → certs → prerequisites → resources. Cites every recommendation. | Foundry IQ |
-| 3 | 📅 Study Plan Generator | Builds week-by-week plans. Flags capacity risk. Compares to similar learners. | Fabric IQ + Work IQ |
-| 4 | ⏰ Engagement Agent | Schedules reminders in safe windows. Adapts tone. Escalates when failing. | Work IQ |
-| 5 | 📝 Assessment Agent | Generates grounded MCQs. Discards unsourced questions. Scores readiness. | Foundry IQ |
-| 6 | 📊 Manager Insights | Team health ratings. Hypothesizes root causes. Never exposes individuals. | Fabric IQ + Work IQ |
-| 7 | 🛡️ Policy Guard | 5-layer compliance gate. Blocks PII, injection, scope violations. | — |
-| 8 | ✅ Verifier | Citation coverage check. Triggers auto-revision on failure. | — |
+### 1. Mission Control Agent — Orchestrator & Router
+
+- **Function:** Classifies user intent using ARM-pattern Chain-of-Thought routing. Extracts context (employee ID, team, certification, role). Detects complex requests requiring multi-agent chains. Handles greetings directly. Outputs a confidence score — if below 0.6, asks for clarification instead of guessing.
+- **Required input:** User message (natural language), optional prior conversation context.
+- **Desired output:** Routing decision with target agent, extracted context fields, confidence score (0.0–1.0), and reasoning trace.
+- **Rejection agent:** Self-contained — does not produce domain answers.
+- **Conditions:** Never answers domain questions directly. If confidence < 0.6, returns clarification request. If greeting or out-of-scope small talk, responds directly without calling sub-agents.
+
+---
+
+### 2. Learning Path Curator Agent — Microsoft Learn / Exam-Tailored
+
+- **Function:** Maps a Microsoft role-based certification target to the correct Microsoft Learn exam path, skills measured domains, prerequisite/foundation suggestions, and approved learning resources. Grounds all recommendations in the Engineering Certification Guide and live Microsoft Learn Search API results.
+- **Required input:** Role, target_certification, experience_level (inferred from learner data), available_hours_per_week (from Work IQ if employee provided), optionally known_skill_gaps.
+- **Desired output:** Ordered learning path with certification, exam focus domains, domain-level learning resources, study sequence, estimated hours, and source citations from Microsoft Learn / engineering_certification_guide.md.
+- **Rejection agent:** Policy Guard Agent.
+- **Conditions:** Reject if the certification code is unknown, if no approved Microsoft Learn-aligned resource is found, or if the request asks for brain dumps / exam cheating content instead of legitimate prep. Flag skill domains with no approved source as `NO_APPROVED_SOURCE`.
+
+---
+
+### 3. Study Plan Generator Agent — Capacity-Aware Scheduling
+
+- **Function:** Converts a learning path into a personalized, week-by-week study schedule that accounts for the employee's meeting load, focus hours, calendar fragmentation, preferred learning slot, and prior progress. Compares to similar learner profiles (analogical reasoning) and revises plans when new constraints emerge (nonmonotonic reasoning).
+- **Required input:** Certification target, employee_id (for Work IQ signals), deadline (optional), prior learner progress data.
+- **Desired output:** Week-by-week milestone plan with topics, target practice scores, hours per week, capacity risk assessment (LOW/MED/HIGH), recommended study slot, buffer week, and fallback path if behind schedule.
+- **Rejection agent:** Policy Guard Agent.
+- **Conditions:** Reject if employee_id is not found in work signals (returns ASSUMPTION FLAG with default plan). Flag as CRITICAL_RISK if meeting hours >20 and available focus hours <2 — never generate a plan that's physically impossible given workload. Revise standard template if user provides constraints that contradict it.
+
+---
+
+### 4. Engagement Agent — Work-Context Reminders
+
+- **Function:** Keeps learners progressing by generating personalized, context-aware reminder schedules. Identifies study-safe windows that don't conflict with meetings or high-collaboration periods. Adapts tone based on progress state. Defines escalation triggers when current strategy isn't working.
+- **Required input:** Employee work pattern (meeting hours, focus blocks, preferred slot, fragmentation score, collaboration messages/day), learner progress (practice score, plan completion %).
+- **Desired output:** Weekly reminder schedule with specific days/times/duration/topic, recommended tone (encouraging/empathetic/celebratory), sample reminder messages, escalation flag with reason if applicable.
+- **Rejection agent:** Policy Guard Agent.
+- **Conditions:** Reject if attempting to schedule before 08:00 or after 21:00, during known meeting blocks, or more than 2 reminders per day. If no work signal data exists, fall back to default schedule with explicit ASSUMPTION FLAG. Revise engagement strategy if progress data shows declining scores despite current approach (nonmonotonic revision).
+
+---
+
+### 5. Assessment Agent — Grounded Question Generation
+
+- **Function:** Evaluates learner readiness by generating scenario-based practice questions grounded in the Engineering Certification Guide and Microsoft Learn content. Every question must map to a specific source passage — unsourced questions are discarded, not surfaced. Scores readiness against certification pass thresholds.
+- **Required input:** Target certification, skill domains (from cert data), learner's current practice score (if available).
+- **Desired output:** 5 scenario-based multiple-choice questions (A, B, C, D) each with source citation, correct answers with explanations, readiness assessment (READY / BORDERLINE / NOT_READY), and weak domain recommendations.
+- **Rejection agent:** Policy Guard Agent.
+- **Conditions:** DISCARD any question that cannot be mapped to a specific passage in the knowledge base. If fewer than 5 grounded questions can be generated, return what's available with a gap flag. Reject requests for actual exam answers, brain dumps, or exam cheating content. Citation threshold: 90% (highest of all agents).
+
+---
+
+### 6. Manager Insights Agent — Team Analytics & Abductive Reasoning
+
+- **Function:** Provides team-level visibility into certification readiness and workforce development. Calculates aggregate metrics, identifies systemic patterns, and hypothesizes root causes using abductive reasoning (not just reports numbers — explains WHY). Generates actionable recommendations targeting the hypothesized cause.
+- **Required input:** Team ID (optional — if omitted, reports on all teams). Uses aggregated learner performance and work signal data.
+- **Desired output:** Team health rating (🟢 GREEN / 🟡 YELLOW / 🔴 RED), aggregate metrics (pass rate, avg score, meeting hours, at-risk count), identified patterns, hypothesized causes (labeled as inferred), and actionable recommendations.
+- **Rejection agent:** Policy Guard Agent.
+- **Conditions:** BLOCK if output contains individual employee IDs, names, or personal scores in team summary. Redirect individual-person queries to aggregate view. Hypotheses must be labeled as inferred ("Most likely cause:") not stated as fact. Exclude null data fields from analytics with ASSUMPTION FLAG.
+
+---
+
+### 7. Policy Guard Agent — 5-Layer Governance Gate
+
+- **Function:** Validates all agent outputs before they reach the user. Runs 5 sequential compliance layers. Acts as the defence-in-depth safety gate for the entire system.
+- **Required input:** Any agent output (passed automatically by pipeline).
+- **Desired output:** Layer-by-layer results (PASS/BLOCK/FLAG) and overall status (CLEARED / BLOCKED / FLAGGED).
+- **Layers:**
+  - Layer 1 — PII Scan: real names, emails, phone numbers → BLOCK
+  - Layer 2 — Credential Scan: API keys, tokens, passwords → BLOCK
+  - Layer 3 — Grounding Compliance: unsourced factual claims → FLAG for Verifier
+  - Layer 4 — Prompt Injection: instruction override attempts → BLOCK
+  - Layer 5 — Scope Compliance: medical/financial/legal advice → BLOCK
+- **Conditions:** Immediately blocks on PII, credentials, injection, or scope violations. Flags grounding issues for Verifier review. When uncertain, returns UNCERTAIN with recommendation for human review — never assumes safe.
+
+---
+
+### 8. Verifier Agent — Quality Gate & REVISE Loop
+
+- **Function:** Final quality validation before response release. Checks citation coverage against adaptive thresholds, reasoning completeness, internal consistency, and assumption count. When verification fails, triggers automatic re-invocation of the originating agent with correction guidance (REVISE loop).
+- **Required input:** Agent output + agent type (for threshold selection).
+- **Desired output:** Verdict (APPROVED / REVISE / ESCALATE) with layer scores.
+- **Adaptive thresholds:**
+  - Assessment Agent: ≥90% citation coverage
+  - Study Plan / Curator: ≥85%
+  - Manager Insights: ≥80%
+  - Engagement: ≥70%
+- **Layers:**
+  - Layer 1 — Citation Coverage: below threshold → REVISE
+  - Layer 2 — Reasoning Completeness: missing required fields → REVISE
+  - Layer 3 — Internal Consistency: mismatched IDs or rules → REVISE
+  - Layer 4 — Assumption Audit: >3 ASSUMPTION FLAGs → ESCALATE to human
+- **Conditions:** REVISE triggers one automatic retry with correction guidance. If still fails after retry, output is released with a quality warning. ESCALATE requires human review — system will not auto-release.
 
 ---
 
