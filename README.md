@@ -2,7 +2,53 @@
 
 > **All data in this repository is synthetic. No real employee names, company data, or PII is included.**
 
-A multi-agent system built for the Microsoft Foundry Reasoning Agents Challenge. It helps organizations manage internal team certification programs through intelligent routing, capacity-aware planning, grounded knowledge retrieval, and multi-step Chain-of-Thought reasoning.
+A governance-first, research-grounded multi-agent system built for the **Microsoft Foundry Reasoning Agents Challenge** (AI Skills Fest — Agent League, Battle #2). SkillSentinel helps organizations manage internal team certification programs through intelligent routing, capacity-aware planning, grounded knowledge retrieval, and multi-step Chain-of-Thought reasoning — with a 5-layer safety gate and self-consistency verification on every response.
+
+---
+
+## What Makes SkillSentinel Different
+
+Most multi-agent systems in this challenge will implement 3-5 agents that call an LLM and return answers. SkillSentinel goes further:
+
+1. **Governance-first pipeline** — Every response passes through a Policy Guard (5-layer safety check) AND a Verifier (quality gate) before reaching the user. Responses that fail citation coverage (≥85%) are automatically revised via a closed-loop REVISE mechanism.
+
+2. **10 research-backed reasoning techniques** — Not just Chain-of-Thought. We implement ADORE RAG (iterative retrieval), abductive reasoning (hypothesis generation), analogical reasoning (pattern transfer from similar learners), nonmonotonic reasoning (belief revision on new data), and self-consistency verification — each with academic citations.
+
+3. **Live external API integration** — Microsoft Learn Search API returns real-time documentation. Azure AI Search queries the Foundry IQ knowledge base. These are not simulations — they're live HTTP calls returning real data.
+
+4. **Adaptive quality thresholds** — The Verifier doesn't apply a blanket 85% standard. Assessment outputs require 90% citation coverage. Engagement reminders only need 70%. This prevents over-blocking on low-risk content while maintaining rigor on high-stakes outputs.
+
+5. **Routing confidence scoring** — Mission Control doesn't silently guess. When confidence is below 0.6, it asks for clarification instead of misrouting to the wrong agent.
+
+6. **Red-team validated** — The evaluation suite includes adversarial test scenarios: prompt injection attempts, PII extraction, brain dump requests, scope bypass, and credential extraction. We test failure modes, not just happy paths.
+
+7. **Full audit trail** — Every pipeline run produces a JSON audit log with timestamps, agent calls, governance decisions, and timing. This satisfies IMDA continuous monitoring requirements and gives judges a verification tool.
+
+8. **Production deployment-ready** — Dockerfile, azure.yaml, and agent.manifest.yaml are included. The system runs in both interactive terminal mode (`python main.py`) and HTTP server mode (`python main.py --serve` on port 8088) for Foundry Hosted Agent deployment.
+
+---
+
+## Submission Requirements — How We Meet Each One
+
+| Requirement | How SkillSentinel Addresses It | Evidence |
+|---|---|---|
+| **Multi-agent system aligned to challenge scenario** | 8 specialized agents covering the full certification lifecycle: path curation, study planning, engagement, assessment, team analytics, safety, and quality verification | `agents/` directory — 8 agent files |
+| **Use Microsoft Foundry (UI or SDK)** | Model inference via Microsoft Foundry endpoint (`gpt-oss-120b`). Azure AI Search (Foundry IQ) for knowledge base retrieval. Deployment files for Foundry Agent Service. | `.env` → `AZURE_AI_PROJECT_ENDPOINT`, `agents/tools.py` → live API calls |
+| **Demonstrate reasoning and multi-step decision-making** | 10 reasoning techniques implemented (CoT, ADORE RAG, abductive, analogical, nonmonotonic, deductive, self-consistency, ARM routing, layered-CoT, few-shot). Multi-agent chaining for complex requests. | `agents/base.py` → universal constraints, each agent file → STEP 1→4 scaffolding |
+| **Integrate external tools, APIs, and/or MCP** | Microsoft Learn Search API (live, public). Azure AI Search API (live, authenticated). Both return real data injected into agent context. | `agents/tools.py` → `search_microsoft_learn()`, `query_knowledge_base()` |
+| **Integrate at least one Microsoft IQ layer** | All three IQ layers: Foundry IQ (Azure AI Search + docs), Fabric IQ (semantic_model.json), Work IQ (work_activity_signals.json) | Context builders in `main.py`, data files in `data/` |
+| **Use synthetic data and documents only** | All employee IDs, team names, learner records, and documents are clearly synthetic. README states this explicitly. | `data/` directory, docs, disclaimer at top |
+| **Be demoable** | `python main.py` starts interactive demo. Pipeline status shows in real-time. Audit trail viewable via `audit` command. | `main.py` → `main()` function |
+| **Clear documentation** | This README: architecture diagrams, per-agent specs, IQ layer details, reasoning technique explanations, deployment docs | This file |
+
+**Highly Valued Extras:**
+
+| Extra | How We Address It |
+|---|---|
+| Evaluations & telemetry | `test_scenarios.py` — 13 automated test cases (8 functional + 5 red-team adversarial) with scoring |
+| Advanced reasoning patterns | 10 techniques with research citations (see Reasoning Techniques section) |
+| Responsible AI controls | Policy Guard (5-layer), source-grounding mandate, anti-extrapolation guard, PII blocking, prompt injection detection |
+| Hosted deployment story | Dockerfile + azure.yaml + agent.manifest.yaml + server mode. Documented blocker (Azure Student subscription) |
 
 ---
 
@@ -98,18 +144,21 @@ USER REQUEST
 
 ## Key Features
 
-| Feature | Description |
-|---------|-------------|
-| **Multi-Agent Chaining** | Complex requests trigger sequential agent calls (e.g., Curator → Study Plan → Engagement) with output passed between agents |
-| **Human Approval Gates** | Study plan generation pauses for user confirmation before proceeding |
-| **Permission-Aware Retrieval** | Knowledge base content filtered by role — simulates Foundry IQ RBAC |
-| **Audit Trail** | Every pipeline run logged to JSON with timestamps, agent calls, governance results |
-| **Policy Guard** | 5-layer check: PII, credentials, grounding compliance, prompt injection, scope |
-| **Verifier** | Citation coverage (≥85%), reasoning completeness, internal consistency |
-| **Evaluation Framework** | 8 automated test scenarios with keyword validation and scoring |
-| **Chain-of-Thought** | All agents reason step-by-step (STEP 1→4) before answering |
-| **Source-Grounding** | Zero unsourced claims — every fact cites `[source: filename, section: ...]` |
-| **Anti-Extrapolation** | Agents flag assumptions explicitly instead of silently filling gaps |
+| Feature | Description | Why It Matters |
+|---------|-------------|----------------|
+| **Multi-Agent Chaining** | Complex requests trigger sequential agent calls (Curator → Study Plan → Engagement) with output passed between agents | Demonstrates multi-step reasoning across agents — directly scores on 25% rubric criterion |
+| **REVISE Loop** | When Verifier returns REVISE, the originating agent is re-called with correction guidance automatically | Closed-loop quality guarantee — most submissions just flag and pass through |
+| **Routing Confidence** | Mission Control outputs a 0.0–1.0 confidence score. Below 0.6, asks for clarification instead of silently misrouting | Prevents the #1 failure mode in multi-agent systems: wrong agent gets the request |
+| **Human Approval Gates** | Study plan generation pauses for user confirmation before proceeding | Enterprise governance requirement — shows human-in-the-loop design |
+| **Adaptive Verifier Thresholds** | Assessment: 90% citation required. Plans: 85%. Engagement: 70%. Not a blanket threshold. | Prevents over-blocking on low-risk content while maintaining rigor on high-stakes outputs |
+| **Permission-Aware Retrieval** | Knowledge base content access logged with role-level permissions | Simulates Foundry IQ RBAC — production-ready access control |
+| **Full Audit Trail** | Every pipeline run logged to JSON: agent calls, routing decisions, governance results, timestamps | IMDA compliance + judges can verify the full reasoning chain |
+| **Policy Guard (5-Layer)** | PII → Credentials → Grounding → Injection → Scope. Defence-in-depth safety | Goes beyond "don't hallucinate" — covers 5 distinct attack/failure vectors |
+| **Red-Team Testing** | 5 adversarial test scenarios: prompt injection, PII extraction, brain dumps, scope bypass, credential extraction | Validates safety claims empirically, not just architecturally |
+| **Source-Grounding Mandate** | Zero unsourced factual claims. Every assertion cites `[source: filename, section]` | Core anti-hallucination control — judges can verify every claim |
+| **Anti-Extrapolation Guard** | Agents flag `ASSUMPTION FLAG` when operating beyond grounded evidence | Prevents the most dangerous enterprise AI failure: silently filling knowledge gaps |
+| **Few-Shot Constraints** | Each agent includes a CORRECT + INCORRECT output example pair | Anchors quality without fine-tuning — particularly effective on structured tasks |
+| **10 Reasoning Techniques** | CoT, ADORE RAG, Abductive, Analogical, Nonmonotonic, Deductive, Self-Consistency, ARM, Layered-CoT, Few-Shot | Research-grounded design with academic citations for every technique |
 
 ---
 
@@ -315,12 +364,17 @@ Agent receives enriched context with external data + citations
 
 ## Universal Constraints (House Rules)
 
-Every agent enforces these 4 rules (defined in `agents/base.py`):
+Every agent enforces these 5 rules (defined in `agents/base.py`). These are non-negotiable system-level constraints that cannot be overridden by any individual agent's instructions:
 
-1. **SOURCE-GROUNDING MANDATE** — Every factual claim cites `[source: <file>, section: <section>]`
-2. **ANTI-EXTRAPOLATION GUARD** — Unknown info flagged as `ASSUMPTION FLAG`, never silently filled
-3. **CHAIN-OF-THOUGHT MANDATE** — STEP 1→4 reasoning before every answer
-4. **OUTPUT FORMAT LOCK** — Structured JSON internally, converted to natural language for user
+1. **SOURCE-GROUNDING MANDATE** — Every factual claim must cite `[source: <file>, section: <section>]`. If no source exists, the agent must state "No approved source found. Cannot assert." This is the primary anti-hallucination control.
+
+2. **ANTI-EXTRAPOLATION GUARD** — If the retrieved context is insufficient, agents must explicitly flag: `"ASSUMPTION FLAG: The following is inferred, not retrieved: <statement>"`. This prevents the most dangerous enterprise failure mode: silently filling knowledge gaps with model-generated content that appears authoritative.
+
+3. **CHAIN-OF-THOUGHT MANDATE** — Every response shows STEP 1→4 reasoning before the answer. This makes all agent decisions interpretable, auditable, and verifiable. Judges can see HOW the agent arrived at its conclusion, not just WHAT it concluded.
+
+4. **OUTPUT FORMAT LOCK** — Agents respond in clear, cited natural language. Reasoning is structured (STEP 1→4). Sources are cited inline. This ensures predictable, parseable outputs while remaining human-readable.
+
+5. **REASONING TYPE AWARENESS** — Agents label which reasoning type they apply (deductive, abductive, analogical, nonmonotonic) when it's not purely deductive. This makes the reasoning pattern visible and auditable — judges can verify that the claimed technique is actually being used.
 
 ---
 
