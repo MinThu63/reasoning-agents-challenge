@@ -19,7 +19,7 @@ from pathlib import Path
 from io import StringIO
 import sys
 
-# Set env vars from Streamlit secrets (for cloud deployment)
+# Set env vars from Streamlit secrets FIRST (before any other imports)
 try:
     if st.secrets:
         for key in ["AZURE_AI_PROJECT_ENDPOINT", "AZURE_AI_MODEL_DEPLOYMENT", "AZURE_AI_API_KEY",

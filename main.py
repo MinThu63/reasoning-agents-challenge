@@ -29,12 +29,15 @@ from openai import OpenAI
 load_dotenv()
 
 # ============================================================
-# Configuration
+# Configuration (read lazily to support Streamlit Cloud secrets)
 # ============================================================
 
-PROJECT_ENDPOINT = os.getenv("AZURE_AI_PROJECT_ENDPOINT", "")
-MODEL_DEPLOYMENT = os.getenv("AZURE_AI_MODEL_DEPLOYMENT", "gpt-oss-120b")
-API_KEY = os.getenv("AZURE_AI_API_KEY", "")
+def _get_config():
+    return {
+        "endpoint": os.getenv("AZURE_AI_PROJECT_ENDPOINT", ""),
+        "model": os.getenv("AZURE_AI_MODEL_DEPLOYMENT", "gpt-oss-120b"),
+        "api_key": os.getenv("AZURE_AI_API_KEY", ""),
+    }
 
 DATA_DIR = Path(__file__).parent / "data"
 DOCS_DIR = Path(__file__).parent / "docs"
@@ -62,20 +65,22 @@ from agents.tools import search_microsoft_learn, query_knowledge_base
 # ============================================================
 
 def get_client() -> OpenAI:
-    base_url = PROJECT_ENDPOINT.split("/api/projects")[0]
+    config = _get_config()
+    base_url = config["endpoint"].split("/api/projects")[0]
     return OpenAI(
-        base_url=f"{base_url}/openai/deployments/{MODEL_DEPLOYMENT}",
-        api_key=API_KEY,
-        default_headers={"api-key": API_KEY},
+        base_url=f"{base_url}/openai/deployments/{config['model']}",
+        api_key=config["api_key"],
+        default_headers={"api-key": config["api_key"]},
         default_query={"api-version": "2024-10-21"},
     )
 
 
 def call_llm(client: OpenAI, system_prompt: str, user_message: str) -> str:
     """Call the LLM with system prompt and user message."""
+    config = _get_config()
     try:
         response = client.chat.completions.create(
-            model=MODEL_DEPLOYMENT,
+            model=config["model"],
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
