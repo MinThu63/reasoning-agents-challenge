@@ -170,7 +170,7 @@ if "context" not in st.session_state:
     st.session_state.context = {"employee_id": None, "team_id": None, "certification": None, "role": None}
 
 # Display chat history
-for message in st.session_state.messages:
+for idx, message in enumerate(st.session_state.messages):
     with st.chat_message(message["role"], avatar="👤" if message["role"] == "user" else "🛡️"):
         if message["role"] == "assistant" and "agent_key" in message:
             render_agent_badge(message["agent_key"], message.get("time_str", ""))
@@ -179,6 +179,14 @@ for message in st.session_state.messages:
             with st.expander("🔍 Reasoning Pipeline", expanded=False):
                 for step in message["pipeline_steps"]:
                     st.markdown(f'<div class="pipeline-step">{step}</div>', unsafe_allow_html=True)
+        # Show follow-up suggestions after the LAST assistant message only
+        if message["role"] == "assistant" and idx == len(st.session_state.messages) - 1:
+            st.markdown("")  # spacing
+            render_suggestions(
+                message.get("agent_key", "general"),
+                message.get("content", ""),
+                st.session_state.context
+            )
 
 
 # ============================================================
@@ -443,13 +451,6 @@ if not st.session_state.messages:
                 st.session_state["next_input"] = prompt_text
                 st.rerun()
     st.markdown("---")
-
-# Show follow-up suggestions after last response
-elif st.session_state.messages and st.session_state.messages[-1]["role"] == "assistant":
-    last_msg = st.session_state.messages[-1]
-    last_agent = last_msg.get("agent_key", "general")
-    last_response = last_msg.get("content", "")
-    render_suggestions(last_agent, last_response, st.session_state.context)
 
 prompt = st.chat_input("Ask SkillSentinel anything about certifications...")
 
