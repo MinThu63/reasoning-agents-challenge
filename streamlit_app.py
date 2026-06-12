@@ -16,8 +16,6 @@ import json
 import time
 import os
 from pathlib import Path
-from io import StringIO
-import sys
 
 # Set env vars from Streamlit secrets FIRST (before any other imports)
 try:
@@ -27,7 +25,7 @@ try:
             if key in st.secrets:
                 os.environ[key] = st.secrets[key]
 except Exception:
-    pass  # No secrets file — use .env instead
+    pass
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -44,7 +42,6 @@ from agents.policy_guard import INSTRUCTIONS as POLICY_GUARD_INSTRUCTIONS
 from agents.verifier import INSTRUCTIONS as VERIFIER_INSTRUCTIONS
 from agents.tools import search_microsoft_learn, query_knowledge_base
 
-# Import pipeline functions from main
 from main import (
     get_client, call_llm, load_json, load_doc,
     build_curator_context, build_study_plan_context,
@@ -66,27 +63,80 @@ st.set_page_config(
 )
 
 # ============================================================
+# Custom CSS
+# ============================================================
+
+st.markdown("""
+<style>
+    .agent-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.85em;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .badge-curator { background: #e3f2fd; color: #1565c0; }
+    .badge-plan { background: #e8f5e9; color: #2e7d32; }
+    .badge-engage { background: #fff3e0; color: #e65100; }
+    .badge-assess { background: #fce4ec; color: #c62828; }
+    .badge-manager { background: #f3e5f5; color: #6a1b9a; }
+    .badge-guard { background: #ffebee; color: #b71c1c; }
+    .badge-general { background: #f5f5f5; color: #424242; }
+    .pipeline-step {
+        padding: 4px 0;
+        font-size: 0.9em;
+        border-left: 3px solid #1976d2;
+        padding-left: 12px;
+        margin: 4px 0;
+    }
+    .time-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        background: #e8eaf6;
+        border-radius: 8px;
+        font-size: 0.8em;
+        color: #283593;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ============================================================
 # Sidebar
 # ============================================================
 
 with st.sidebar:
-    st.image("https://img.icons8.com/fluency/96/security-checked.png", width=60)
-    st.title("SkillSentinel")
-    st.caption("Enterprise Certification Readiness System")
+    st.title("🛡️ SkillSentinel")
+    st.caption("Enterprise Certification Readiness")
 
     st.divider()
 
-    st.markdown("**8 Agents · 10 Reasoning Techniques**")
-    st.markdown("""
-    - 🎯 Mission Control (Router)
-    - 📚 Learning Path Curator
-    - 📅 Study Plan Generator
-    - ⏰ Engagement Agent
-    - 📝 Assessment Agent
-    - 📊 Manager Insights
-    - 🛡️ Policy Guard
-    - ✅ Verifier
-    """)
+    # System Status
+    st.markdown("**System Status**")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("🟢 Foundry Model")
+        st.markdown("🟢 AI Search")
+    with col2:
+        st.markdown("🟢 Learn API")
+        st.markdown("🟢 Pipeline")
+
+    st.divider()
+
+    # Context display
+    st.markdown("**Active Context**")
+    if "context" in st.session_state:
+        ctx = st.session_state.context
+        if ctx.get("employee_id"):
+            st.markdown(f"👤 Employee: `{ctx['employee_id']}`")
+        if ctx.get("team_id"):
+            st.markdown(f"👥 Team: `{ctx['team_id']}`")
+        if ctx.get("certification"):
+            st.markdown(f"📜 Cert: `{ctx['certification']}`")
+        if not any([ctx.get("employee_id"), ctx.get("team_id"), ctx.get("certification")]):
+            st.markdown("_No context yet — ask a question_")
+    else:
+        st.markdown("_No context yet_")
 
     st.divider()
 
@@ -105,14 +155,38 @@ with st.sidebar:
             st.rerun()
 
     st.divider()
-    st.markdown("**IQ Layers:**")
-    st.markdown("🟢 Foundry IQ (Azure AI Search) — Live")
-    st.markdown("🟢 Fabric IQ (Semantic Model) — Active")
-    st.markdown("🟢 Work IQ (Employee Signals) — Active")
-    st.markdown("🟢 Microsoft Learn API — Live")
+
+    # Clear chat button
+    if st.button("🗑️ Clear Chat", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.context = {"employee_id": None, "team_id": None, "certification": None, "role": None}
+        st.rerun()
 
     st.divider()
-    st.caption("Built for Microsoft AI Skills Fest · Agent League · Battle #2")
+    st.caption("Built for Microsoft AI Skills Fest\nAgent League · Battle #2")
+
+
+# ============================================================
+# Agent Badge Helper
+# ============================================================
+
+AGENT_BADGES = {
+    "learning_path": ("📚 Learning Path Curator", "badge-curator"),
+    "study_plan": ("📅 Study Plan Generator", "badge-plan"),
+    "engagement": ("⏰ Engagement Agent", "badge-engage"),
+    "assessment": ("📝 Assessment Agent", "badge-assess"),
+    "manager_insights": ("📊 Manager Insights", "badge-manager"),
+    "general": ("🎯 Mission Control", "badge-general"),
+    "chain": ("🔗 Multi-Agent Chain", "badge-curator"),
+}
+
+
+def render_agent_badge(agent_key: str, extra: str = ""):
+    label, css_class = AGENT_BADGES.get(agent_key, ("🤖 Agent", "badge-general"))
+    badge_html = f'<span class="agent-badge {css_class}">{label}</span>'
+    if extra:
+        badge_html += f' <span class="time-badge">{extra}</span>'
+    st.markdown(badge_html, unsafe_allow_html=True)
 
 
 # ============================================================
@@ -120,7 +194,7 @@ with st.sidebar:
 # ============================================================
 
 st.title("🛡️ SkillSentinel")
-st.markdown("*Enterprise Certification Readiness System — Reasoning Agents with Microsoft Foundry*")
+st.markdown("*Enterprise Certification Readiness — 8 Agents · 10 Reasoning Techniques · Governance Pipeline*")
 
 # Initialize session state
 if "messages" not in st.session_state:
@@ -131,36 +205,42 @@ if "context" not in st.session_state:
 # Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"], avatar="👤" if message["role"] == "user" else "🛡️"):
+        if message["role"] == "assistant" and "agent_key" in message:
+            render_agent_badge(message["agent_key"], message.get("time_str", ""))
         st.markdown(message["content"])
-        if "metadata" in message:
-            with st.expander("📋 Pipeline Details", expanded=False):
-                st.json(message["metadata"])
+        if "pipeline_steps" in message and message["pipeline_steps"]:
+            with st.expander("🔍 Reasoning Pipeline", expanded=False):
+                for step in message["pipeline_steps"]:
+                    st.markdown(f'<div class="pipeline-step">{step}</div>', unsafe_allow_html=True)
 
 
 # ============================================================
-# Pipeline (adapted for Streamlit)
+# Pipeline (adapted for Streamlit with live status)
 # ============================================================
 
-def run_streamlit_pipeline(user_message: str) -> dict:
-    """Run the full pipeline and return response + metadata."""
+def run_streamlit_pipeline(user_message: str, status_container) -> dict:
+    """Run the full pipeline with live status updates."""
     client = get_client()
     context = st.session_state.context
     audit = AuditTrail()
     audit.start(user_message)
-    metadata = {"agents_called": [], "pipeline_steps": []}
+    pipeline_steps = []
+    agent_key = "general"
 
     # Pre-check greetings
     greeting_patterns = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening",
                          "what can you do", "who are you", "thanks", "thank you", "bye"]
     if user_message.strip().lower().rstrip("!?.") in greeting_patterns or len(user_message.strip()) < 4:
-        metadata["pipeline_steps"].append("🎯 Greeting detected (local pattern match)")
+        pipeline_steps.append("🎯 Greeting detected → direct response")
         return {
             "response": "Hello! I'm SkillSentinel. I can help with:\n- **Certification paths** — \"What certs for a Cloud Engineer?\"\n- **Study plans** — \"Create a plan for EMP-034\"\n- **Practice questions** — \"Quiz me on AZ-400\"\n- **Engagement reminders** — \"When should EMP-056 study?\"\n- **Team insights** — \"How is TEAM-D doing?\"\n\nWhat would you like help with?",
-            "metadata": metadata,
+            "agent_key": "general",
+            "pipeline_steps": pipeline_steps,
         }
 
     # Step 1: Route
-    metadata["pipeline_steps"].append("🎯 Mission Control: classifying intent...")
+    status_container.markdown("🎯 **Mission Control** — classifying intent...")
+    pipeline_steps.append("🎯 Mission Control: classifying intent...")
     routing_prompt = build_prompt(MISSION_CONTROL_INSTRUCTIONS)
     routing_result = call_llm(client, routing_prompt, user_message)
 
@@ -182,18 +262,24 @@ def run_streamlit_pipeline(user_message: str) -> dict:
 
     agent_key = routing.get("agent", "learning_path")
     confidence = routing.get("confidence", 1.0)
-    metadata["routing"] = routing
+
+    if routing.get("reasoning"):
+        pipeline_steps.append(f"💡 Reasoning: {routing['reasoning']}")
 
     # Handle general
     if agent_key == "general":
         direct = routing.get("direct_response", "I can help with certification paths, study plans, practice questions, reminders, and team insights. What would you like?")
-        metadata["pipeline_steps"].append("🎯 Mission Control: direct response (general)")
-        return {"response": direct, "metadata": metadata}
+        pipeline_steps.append("🎯 Direct response (no specialist needed)")
+        return {"response": direct, "agent_key": "general", "pipeline_steps": pipeline_steps}
 
     # Handle low confidence
     if isinstance(confidence, (int, float)) and confidence < 0.6:
-        metadata["pipeline_steps"].append(f"⚠️ Low confidence ({confidence}) — requesting clarification")
-        return {"response": "I'm not quite sure what you need. Could you clarify? I can help with:\n- Certification recommendations\n- Study plans\n- Practice questions\n- Reminders\n- Team progress", "metadata": metadata}
+        pipeline_steps.append(f"⚠️ Low confidence ({confidence}) → asking for clarification")
+        return {
+            "response": "I'm not quite sure what you need. Could you clarify? I can help with:\n- Certification recommendations\n- Study plans\n- Practice questions\n- Reminders\n- Team progress",
+            "agent_key": "general",
+            "pipeline_steps": pipeline_steps,
+        }
 
     # Step 2: Chain or single agent
     chain = None
@@ -204,49 +290,62 @@ def run_streamlit_pipeline(user_message: str) -> dict:
         chain = CHAIN_DEFINITIONS["readiness_check"]
 
     if chain:
-        metadata["pipeline_steps"].append(f"🔗 Chain: {' → '.join(AGENT_CONFIG[a]['label'] for a in chain)}")
+        chain_labels = [AGENT_CONFIG[a]["label"] for a in chain]
+        status_container.markdown(f"🔗 **Chain:** {' → '.join(chain_labels)}")
+        pipeline_steps.append(f"🔗 Multi-Agent Chain: {' → '.join(chain_labels)}")
+        agent_key = "chain"
+
         previous_output = ""
         final_parts = []
-        for agent_key_in_chain in chain:
+        for i, agent_key_in_chain in enumerate(chain):
             config = AGENT_CONFIG[agent_key_in_chain]
-            metadata["agents_called"].append(config["label"])
-            metadata["pipeline_steps"].append(f"  ↳ Calling {config['label']}...")
+            status_container.markdown(f"⏳ [{i+1}/{len(chain)}] **{config['label']}** processing...")
+            pipeline_steps.append(f"  [{i+1}/{len(chain)}] {config['label']} ✓")
             response = call_single_agent(client, agent_key_in_chain, user_message, context, audit, previous_output)
             previous_output = response
             final_parts.append(f"**{config['label']}:**\n\n{response}")
+
         agent_output = "\n\n---\n\n".join(final_parts)
     else:
         config = AGENT_CONFIG.get(agent_key, AGENT_CONFIG["learning_path"])
-        metadata["agents_called"].append(config["label"])
-        metadata["pipeline_steps"].append(f"🔄 Routing → {config['label']}")
+        status_container.markdown(f"⏳ **{config['label']}** processing...")
+        pipeline_steps.append(f"🔄 Routed → {config['label']}")
         agent_output = call_single_agent(client, agent_key, user_message, context, audit)
 
     # Step 3: Governance
-    metadata["pipeline_steps"].append("🛡️ Policy Guard + Verifier...")
-    blocked, final_output = run_governance(client, agent_output, agent_key, user_message, context, audit)
-    if blocked:
-        metadata["pipeline_steps"].append("❌ BLOCKED by Policy Guard")
-        return {"response": "⚠️ Response blocked by Policy Guard due to policy violations.", "metadata": metadata}
+    status_container.markdown("🛡️ **Governance** — Policy Guard + Verifier...")
+    pipeline_steps.append("🛡️ Policy Guard (5-layer) + Verifier...")
+    effective_key = chain[0] if chain else agent_key
+    blocked, final_output = run_governance(client, agent_output, effective_key, user_message, context, audit)
 
-    metadata["pipeline_steps"].append("✅ Governance passed")
+    if blocked:
+        pipeline_steps.append("❌ BLOCKED by Policy Guard")
+        return {
+            "response": "⚠️ Response blocked by Policy Guard due to policy violations.",
+            "agent_key": "guard",
+            "pipeline_steps": pipeline_steps,
+        }
+
+    pipeline_steps.append("✅ Governance passed — APPROVED")
 
     # Format
     formatted = format_response(final_output)
     trail = audit.finalize()
-    metadata["audit_id"] = trail["pipeline_id"]
-    metadata["total_time"] = trail["total_time_seconds"]
+    pipeline_steps.append(f"📋 Audit: `{trail['pipeline_id']}` ({trail['total_time_seconds']}s)")
 
-    return {"response": formatted, "metadata": metadata}
+    return {
+        "response": formatted,
+        "agent_key": agent_key if not chain else "chain",
+        "pipeline_steps": pipeline_steps,
+    }
 
 
 # ============================================================
 # Chat Input
 # ============================================================
 
-# Get input from either chat box or sidebar button
 prompt = st.chat_input("Ask SkillSentinel anything about certifications...")
 
-# If a sidebar button was clicked, use that instead
 if "next_input" in st.session_state:
     prompt = st.session_state.pop("next_input")
 
@@ -256,27 +355,36 @@ if prompt:
     with st.chat_message("user", avatar="👤"):
         st.markdown(prompt)
 
-    # Generate response
+    # Generate response with live status
     with st.chat_message("assistant", avatar="🛡️"):
-        with st.spinner("Reasoning..."):
-            start = time.time()
-            result = run_streamlit_pipeline(prompt)
-            elapsed = round(time.time() - start, 1)
+        status_placeholder = st.empty()
+        start = time.time()
 
+        result = run_streamlit_pipeline(prompt, status_placeholder)
+
+        elapsed = round(time.time() - start, 1)
+        time_str = f"{elapsed}s"
+
+        # Clear the status and show final response
+        status_placeholder.empty()
+
+        # Show agent badge
+        render_agent_badge(result["agent_key"], time_str)
+
+        # Show response
         st.markdown(result["response"])
 
-        # Show pipeline details
-        with st.expander(f"📋 Pipeline Details ({elapsed}s)", expanded=False):
-            for step in result["metadata"].get("pipeline_steps", []):
-                st.markdown(f"  {step}")
-            if result["metadata"].get("agents_called"):
-                st.markdown(f"  **Agents:** {', '.join(result['metadata']['agents_called'])}")
-            if result["metadata"].get("audit_id"):
-                st.markdown(f"  **Audit:** `{result['metadata']['audit_id']}`")
+        # Show pipeline steps
+        if result.get("pipeline_steps"):
+            with st.expander("🔍 Reasoning Pipeline", expanded=False):
+                for step in result["pipeline_steps"]:
+                    st.markdown(f'<div class="pipeline-step">{step}</div>', unsafe_allow_html=True)
 
     # Save to history
     st.session_state.messages.append({
         "role": "assistant",
         "content": result["response"],
-        "metadata": result["metadata"],
+        "agent_key": result["agent_key"],
+        "time_str": time_str,
+        "pipeline_steps": result.get("pipeline_steps", []),
     })
