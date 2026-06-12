@@ -311,6 +311,25 @@ def run_streamlit_pipeline(user_message: str, status_container) -> dict:
 # Chat Input
 # ============================================================
 
+# Show starter prompts if chat is empty
+if not st.session_state.messages:
+    st.markdown("**Try one of these to get started:**")
+    cols = st.columns(3)
+    starter_prompts = [
+        "What certs should a Cloud Engineer get?",
+        "Create a study plan for EMP-034",
+        "Help me prepare for AZ-204",
+        "How is TEAM-D performing?",
+        "Give me practice questions for AZ-400",
+        "When should EMP-056 study this week?",
+    ]
+    for i, prompt_text in enumerate(starter_prompts):
+        with cols[i % 3]:
+            if st.button(prompt_text, key=f"start_{i}", use_container_width=True):
+                st.session_state["next_input"] = prompt_text
+                st.rerun()
+    st.markdown("---")
+
 prompt = st.chat_input("Ask SkillSentinel anything about certifications...")
 
 if "next_input" in st.session_state:
