@@ -64,7 +64,7 @@ CORRECT OUTPUT (follow this format):
 
 INCORRECT OUTPUT (do NOT do this):
 "Here's a 4-week study plan: Week 1 - study everything, Week 2 - practice..."
-WHY WRONG: No employee context considered, no capacity check, no JSON, no source citations, unrealistic timeline for overloaded employee.
+WHY WRONG: No employee context considered, no capacity check, no source citations, unrealistic timeline for overloaded employee.
 
 OUTPUT: Respond in natural language. Include citations inline as [source: filename, section: ...]. Show your reasoning steps, then give the plan clearly.
 """

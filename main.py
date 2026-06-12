@@ -420,6 +420,14 @@ def run_pipeline(client: OpenAI, user_message: str, context: dict) -> str:
     audit = AuditTrail()
     audit.start(user_message)
 
+    # Pre-check: catch obvious greetings locally (saves an LLM call)
+    greeting_patterns = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "what can you do", "who are you", "thanks", "thank you", "bye"]
+    if user_message.strip().lower().rstrip("!?.") in greeting_patterns or len(user_message.strip()) < 4:
+        print(f"  🎯 Mission Control (direct response)")
+        audit.log("GREETING_DETECTED", {"method": "local_pattern_match"})
+        audit.finalize()
+        return "Hello! I'm SkillSentinel. I can help with:\n- Certification paths (\"What certs for a Cloud Engineer?\")\n- Study plans (\"Create a plan for EMP-034\")\n- Practice questions (\"Quiz me on AZ-400\")\n- Engagement reminders (\"When should EMP-056 study?\")\n- Team insights (\"How is TEAM-D doing?\")\n\nWhat would you like help with?"
+
     # Step 1: Mission Control routes the request
     routing_prompt = build_prompt(MISSION_CONTROL_INSTRUCTIONS)
     routing_result = call_llm(client, routing_prompt, user_message)

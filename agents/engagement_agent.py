@@ -67,7 +67,7 @@ CORRECT OUTPUT (follow this format):
 
 INCORRECT OUTPUT (do NOT do this):
 "You should study every morning at 7am for 2 hours."
-WHY WRONG: Ignores work pattern data, no personalisation, before 08:00 constraint violated, no JSON, no reasoning.
+WHY WRONG: Ignores work pattern data, no personalisation, before 08:00 constraint violated, no reasoning.
 
 OUTPUT: Respond in natural language. Include citations inline as [source: filename]. Show your reasoning steps, then give the engagement recommendations clearly. Be warm and supportive in tone.
 """
