@@ -1,4 +1,4 @@
-SkillSentinel
+Fabric 365
 Multi-Agent Enterprise Certification Readiness System
 AI Agent League — Agent Review Report
 Microsoft AI Skills Fest · Reasoning Agents Track · Battle #2
@@ -17,7 +17,7 @@ Safety
 Policy Guard
 SECTION 1 — EXECUTIVE SUMMARY
 Project Overview
-SkillSentinel is an 8-agent enterprise certification readiness pipeline built on Microsoft Foundry. It implements a
+Fabric 365 is an 8-agent enterprise certification readiness pipeline built on Microsoft Foundry. It implements a
 supervisor-orchestrated, governance-first multi-agent architecture that covers the entire employee learning
 lifecycle: intent classification, learning path curation (Foundry IQ), capacity-aware study planning (Fabric IQ),
 work-context engagement scheduling (Work IQ), grounded assessment generation (Foundry IQ), team-level
@@ -25,7 +25,7 @@ analytics (Fabric IQ + Work IQ), 5-layer policy compliance (Policy Guard), and s
 (Verifier). The system runs on gpt-oss-120b via Azure AI Foundry and integrates live Azure AI Search and
 Microsoft Learn Search API for real-time grounded retrieval.
 Evaluation Framework Used
-This review assesses SkillSentinel against the official Agent League scoring rubric (Accuracy & Relevance 25%,
+This review assesses Fabric 365 against the official Agent League scoring rubric (Accuracy & Relevance 25%,
 Reasoning & Multi-Step Thinking 25%, Creativity & Originality 15%, User Experience & Presentation 15%,
 Reliability & Safety 20%), cross-referenced with Microsoft Research agentic AI standards, IMDA Agentic AI
 Governance Framework v2026, and Microsoft Foundry best practices for hosted agents and enterprise retrieval.
@@ -295,10 +295,10 @@ capability threshold finding (~100B params) in README to justify model choice.
 Agent for generating 3 answer explanations and selecting the most consistent one.
 • Lewis et al. (2020) RAG — Already applied. Add REALM (Guu et al. 2020) retrieval pre-training reference
 to strengthen the ADORE RAG justification.
-• Microsoft AutoGen (Wu et al. 2023) — Cite in README to position SkillSentinel as implementing
+• Microsoft AutoGen (Wu et al. 2023) — Cite in README to position Fabric 365 as implementing
 AutoGen-class multi-agent collaboration patterns within Microsoft Agent Framework.
 • IMDA Agentic AI Governance Framework (2026) — Already cited for source-grounding and
-anti-extrapolation. Add explicit mapping table: IMDA control → SkillSentinel implementation in README.
+anti-extrapolation. Add explicit mapping table: IMDA control → Fabric 365 implementation in README.
 • Microsoft Responsible AI Principles — Add a 6-principle compliance table (Fairness, Reliability & Safety,
 Privacy & Security, Inclusiveness, Transparency, Accountability) showing how each principle is implemented
 across the 8-agent architecture.
@@ -310,7 +310,7 @@ ROLE You are a Microsoft AI Engineer and Research Scientist with deep expertise 
 Foundry, Azure AI Agent Service, Microsoft IQ (Foundry IQ / Fabric IQ / Work IQ), multi-agent
 systems, responsible AI, and enterprise-grade deployment patterns. You are conducting a formal
 technical review of a hackathon submission for the Microsoft AI Skills Fest — Agent League,
-Battle #2: Reasoning Agents with Microsoft Foundry. CONTEXT The project is SkillSentinel — an
+Battle #2: Reasoning Agents with Microsoft Foundry. CONTEXT The project is Fabric 365 — an
 8-agent enterprise certification readiness system. All relevant materials are attached: the full
 project README (which includes architecture, agent specifications, IQ layer integration,
 reasoning technique documentation, deployment files, and live output samples), the official
@@ -355,7 +355,7 @@ arXiv:2501.18645 Layered-CoT (cited in README) 3.2 Identify 3–5 additional Mic
 peer-reviewed research publications (published 2023–2026) that would amplify the system's
 reasoning or retrieval capabilities if applied. For each publication: name, year, core finding,
 and specific agent it applies to. 3.3 Microsoft Responsible AI Alignment Cross-reference
-SkillSentinel's design against Microsoft's 6 Responsible AI Principles. Produce a compliance
+Fabric 365's design against Microsoft's 6 Responsible AI Principles. Produce a compliance
 table. Flag any principle with insufficient coverage.
 nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn PART 4:
 EVALUATION RUBRIC SCORING
@@ -371,15 +371,15 @@ nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn 5.1
 Prioritised Action List Provide exactly 10 prioritised improvements, ordered by (impact ×
 feasibility within hackathon timeframe). For each: action, target agent(s), estimated effort,
 expected score impact. 5.2 Stretch Goals (Post-Hackathon) Identify 3 architectural extensions
-that would make SkillSentinel production-grade at enterprise scale. Reference relevant Microsoft
+that would make Fabric 365 production-grade at enterprise scale. Reference relevant Microsoft
 Azure services or research patterns for each. 5.3 Competitive Differentiation Based on the 121
-submissions in this challenge track, identify the specific features of SkillSentinel that are
+submissions in this challenge track, identify the specific features of Fabric 365 that are
 genuinely rare or unique, and recommend how to make them more visible in the demo and
 documentation.
 nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn PART 6:
 MICROSOFT LEARN ALIGNMENT
 nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn Map
-SkillSentinel's implemented capabilities to specific Microsoft Learn learning paths and modules.
+Fabric 365's implemented capabilities to specific Microsoft Learn learning paths and modules.
 For each agent, identify the most relevant Microsoft Learn content that validates the approach
 used. Flag any agent whose implementation diverges from the Microsoft Learn recommended pattern
 and provide the corrective reference.
@@ -395,5 +395,5 @@ structured report with labelled sections and tables. Avoid paragraph-heavy prose
 points, tables, and scored rubrics throughout. - Final output should be feasible and actionable.
 Every recommendation must have a clear implementation path using Microsoft Foundry, Azure AI, or
 Microsoft Agent Framework tools.
-SkillSentinel Review Report · AI Skills Fest Agent League · Battle #2: Reasoning Agents · Generated June 11, 2026 · All evaluation is
+Fabric 365 Review Report · AI Skills Fest Agent League · Battle #2: Reasoning Agents · Generated June 11, 2026 · All evaluation is
 based on synthetic data only.

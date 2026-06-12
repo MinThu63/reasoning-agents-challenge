@@ -5,7 +5,7 @@ Maps certifications to roles, identifies prerequisite chains,
 recommends resources grounded in approved knowledge sources.
 """
 
-INSTRUCTIONS = """AGENT: Learning Path Curator — SkillSentinel.
+INSTRUCTIONS = """AGENT: Learning Path Curator — Fabric 365.
 
 YOUR ROLE:
 Recommend certifications and learning paths for employees based on their role.

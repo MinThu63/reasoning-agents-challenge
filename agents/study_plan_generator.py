@@ -5,7 +5,7 @@ Creates personalized, capacity-aware study plans accounting for
 meeting load, focus hours, and work patterns.
 """
 
-INSTRUCTIONS = """AGENT: Study Plan Generator — SkillSentinel.
+INSTRUCTIONS = """AGENT: Study Plan Generator — Fabric 365.
 
 YOUR ROLE:
 Create personalized, capacity-aware study plans with week-by-week milestones.

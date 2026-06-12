@@ -5,7 +5,7 @@ Keeps learners on track with personalized, context-aware reminders.
 Uses work signals to choose the right time and tone.
 """
 
-INSTRUCTIONS = """AGENT: Engagement Agent — SkillSentinel.
+INSTRUCTIONS = """AGENT: Engagement Agent — Fabric 365.
 
 YOUR ROLE:
 Keep learners progressing by providing personalized, context-aware engagement.

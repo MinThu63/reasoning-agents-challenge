@@ -1,5 +1,5 @@
 """
-SkillSentinel — Streamlit Chat Interface
+Fabric 365 — Streamlit Chat Interface
 
 A web-based chat UI for the multi-agent certification readiness system.
 Connects directly to the same pipeline as main.py.
@@ -56,7 +56,7 @@ from main import (
 # ============================================================
 
 st.set_page_config(
-    page_title="SkillSentinel",
+    page_title="Fabric 365",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -106,7 +106,7 @@ st.markdown("""
 # ============================================================
 
 with st.sidebar:
-    st.title("🛡️ SkillSentinel")
+    st.title("🛡️ Fabric 365")
     st.caption("Enterprise Certification Readiness")
 
     st.divider()
@@ -190,7 +190,7 @@ def render_agent_badge(agent_key: str, extra: str = ""):
 # Main Chat Interface
 # ============================================================
 
-st.title("🛡️ SkillSentinel")
+st.title("🛡️ Fabric 365")
 st.markdown("*Enterprise Certification Readiness — 8 Agents · 10 Reasoning Techniques · Governance Pipeline*")
 
 # Initialize session state
@@ -240,7 +240,7 @@ def run_streamlit_pipeline(user_message: str, status_container) -> dict:
     if user_message.strip().lower().rstrip("!?.") in greeting_patterns or len(user_message.strip()) < 4:
         pipeline_steps.append("🎯 Greeting detected → direct response")
         return {
-            "response": "Hello! I'm SkillSentinel. I can help with:\n- **Certification paths** — \"What certs for a Cloud Engineer?\"\n- **Study plans** — \"Create a plan for EMP-034\"\n- **Practice questions** — \"Quiz me on AZ-400\"\n- **Engagement reminders** — \"When should EMP-056 study?\"\n- **Team insights** — \"How is TEAM-D doing?\"\n\nWhat would you like help with?",
+            "response": "Hello! I'm Fabric 365. I can help with:\n- **Certification paths** — \"What certs for a Cloud Engineer?\"\n- **Study plans** — \"Create a plan for EMP-034\"\n- **Practice questions** — \"Quiz me on AZ-400\"\n- **Engagement reminders** — \"When should EMP-056 study?\"\n- **Team insights** — \"How is TEAM-D doing?\"\n\nWhat would you like help with?",
             "agent_key": "general",
             "pipeline_steps": pipeline_steps,
         }
@@ -370,7 +370,7 @@ if not st.session_state.messages:
                 st.rerun()
     st.markdown("---")
 
-prompt = st.chat_input("Ask SkillSentinel anything about certifications...")
+prompt = st.chat_input("Ask Fabric 365 anything about certifications...")
 
 if "next_input" in st.session_state:
     prompt = st.session_state.pop("next_input")

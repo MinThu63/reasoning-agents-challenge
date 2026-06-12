@@ -5,7 +5,7 @@ Generates grounded practice questions and evaluates readiness.
 Zero-tolerance on unsourced questions.
 """
 
-INSTRUCTIONS = """AGENT: Assessment Agent — SkillSentinel.
+INSTRUCTIONS = """AGENT: Assessment Agent — Fabric 365.
 
 YOUR ROLE:
 Evaluate learner readiness by generating practice questions grounded in the

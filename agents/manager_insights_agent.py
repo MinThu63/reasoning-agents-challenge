@@ -5,7 +5,7 @@ Provides team-level visibility into certification readiness.
 Aggregates only — never exposes individual data.
 """
 
-INSTRUCTIONS = """AGENT: Manager Insights Agent — SkillSentinel.
+INSTRUCTIONS = """AGENT: Manager Insights Agent — Fabric 365.
 
 YOUR ROLE:
 Provide team-level visibility into certification readiness and workforce development.

@@ -1,4 +1,4 @@
-# SkillSentinel
+# Fabric 365
 
 **The enterprise certification system that reasons, not just retrieves.**
 
@@ -6,11 +6,13 @@ Proves whether employees are ready for Microsoft certifications — by grounding
 
 🏆 Microsoft AI Skills Fest · Agent League · Battle #2: Reasoning Agents with Microsoft Foundry
 
+🎬 **[Live Demo →](https://reasoning-agents-challenge-cccgguvd3had4mdkdbxrnw.streamlit.app/)**
+
 ---
 
 ## 30-Second Judge Proof
 
-SkillSentinel is not a chatbot that answers certification questions. It is a **governance-first reasoning pipeline** where every response passes through 8 specialized agents, a 5-layer safety gate, and a self-consistency verifier before reaching the user.
+Fabric 365 is not a chatbot that answers certification questions. It is a **governance-first reasoning pipeline** where every response passes through 8 specialized agents, a 5-layer safety gate, and a self-consistency verifier before reaching the user.
 
 - **Problem:** Enterprise teams waste months on generic study plans that ignore workload, fail to track readiness, and produce uncited recommendations that cannot be audited.
 - **Why agents:** The decision requires role mapping, prerequisite sequencing, capacity-aware scheduling, work-pattern analysis, grounded assessment, team analytics, policy compliance, and quality verification. A single prompt cannot decompose this reliably.
@@ -38,9 +40,9 @@ Every organization running a certification program hits the same issues:
 
 ## 💡 The Solution
 
-SkillSentinel decomposes certification readiness into **8 specialist agents** that reason step-by-step, ground every claim in approved sources, and pass through governance before reaching the user.
+Fabric 365 decomposes certification readiness into **8 specialist agents** that reason step-by-step, ground every claim in approved sources, and pass through governance before reaching the user.
 
-| What Others Do | What SkillSentinel Does |
+| What Others Do | What Fabric 365 Does |
 |---|---|
 | Single chatbot with a long prompt | 8 specialized agents with distinct reasoning |
 | One-shot retrieval | ADORE iterative 3-round retrieval |
@@ -298,6 +300,16 @@ Agents use this to: schedule safe study windows, detect overload risk, adapt eng
 
 ## 🚀 Get Started
 
+### Live Demo (Streamlit Cloud)
+
+Try it now — no setup required:
+
+**[https://reasoning-agents-challenge-cccgguvd3had4mdkdbxrnw.streamlit.app/](https://reasoning-agents-challenge-cccgguvd3had4mdkdbxrnw.streamlit.app/)**
+
+Features: multi-chat, agent badges, live pipeline status, reasoning trace expander, response timing.
+
+### Local Setup
+
 ```powershell
 # Clone
 git clone https://github.com/MinThu63/reasoning-agents-challenge.git
@@ -398,7 +410,7 @@ Deployment artifacts included: `Dockerfile`, `azure.yaml`, `agent.manifest.yaml`
 
 ## 🌍 Why This Approach
 
-The challenge asks for reasoning agents that demonstrate multi-step thinking. Many submissions will build a chatbot that answers certification questions. SkillSentinel takes a different position:
+The challenge asks for reasoning agents that demonstrate multi-step thinking. Many submissions will build a chatbot that answers certification questions. Fabric 365 takes a different position:
 
 **The system doesn't just answer — it reasons, validates, and proves its work.**
 

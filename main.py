@@ -1,5 +1,5 @@
 """
-SkillSentinel — Multi-Agent Enterprise Certification Readiness System
+Fabric 365 — Multi-Agent Enterprise Certification Readiness System
 
 Local development approach using Microsoft Foundry model endpoint.
 8 agents with Chain-of-Thought reasoning, source-grounding, and structured outputs.
@@ -431,7 +431,7 @@ def run_pipeline(client: OpenAI, user_message: str, context: dict) -> str:
         print(f"  🎯 Mission Control (direct response)")
         audit.log("GREETING_DETECTED", {"method": "local_pattern_match"})
         audit.finalize()
-        return "Hello! I'm SkillSentinel. I can help with:\n- Certification paths (\"What certs for a Cloud Engineer?\")\n- Study plans (\"Create a plan for EMP-034\")\n- Practice questions (\"Quiz me on AZ-400\")\n- Engagement reminders (\"When should EMP-056 study?\")\n- Team insights (\"How is TEAM-D doing?\")\n\nWhat would you like help with?"
+        return "Hello! I'm Fabric 365. I can help with:\n- Certification paths (\"What certs for a Cloud Engineer?\")\n- Study plans (\"Create a plan for EMP-034\")\n- Practice questions (\"Quiz me on AZ-400\")\n- Engagement reminders (\"When should EMP-056 study?\")\n- Team insights (\"How is TEAM-D doing?\")\n\nWhat would you like help with?"
 
     # Step 1: Mission Control routes the request
     routing_prompt = build_prompt(MISSION_CONTROL_INSTRUCTIONS)
@@ -475,7 +475,7 @@ def run_pipeline(client: OpenAI, user_message: str, context: dict) -> str:
 
     # Handle general/greeting messages directly
     if agent_key == "general":
-        direct = routing.get("direct_response", "Hello! I'm SkillSentinel. I can help with certification paths, study plans, practice questions, engagement reminders, and team insights. What would you like help with?")
+        direct = routing.get("direct_response", "Hello! I'm Fabric 365. I can help with certification paths, study plans, practice questions, engagement reminders, and team insights. What would you like help with?")
         print(f"  🎯 Mission Control (direct response)")
         audit.log("DIRECT_RESPONSE", {"message": direct})
         audit.finalize()
@@ -566,7 +566,7 @@ def main():
 
     print()
     print("╔══════════════════════════════════════════════════════════════╗")
-    print("║  SkillSentinel — Enterprise Certification Readiness System  ║")
+    print("║  Fabric 365 — Enterprise Certification Readiness System  ║")
     print("║  Local Development | Model: gpt-oss-120b                    ║")
     print("╠══════════════════════════════════════════════════════════════╣")
     print("║  Agents:                                                     ║")
@@ -611,7 +611,7 @@ def main():
         print()
         response = run_pipeline(client, user_input, context)
         print()
-        print(f"🤖 SkillSentinel:\n")
+        print(f"🤖 Fabric 365:\n")
         print(response)
         print()
         print("─" * 60)
@@ -620,7 +620,7 @@ def main():
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="SkillSentinel Multi-Agent System")
+    parser = argparse.ArgumentParser(description="Fabric 365 Multi-Agent System")
     parser.add_argument("--serve", action="store_true", help="Run as HTTP server (Hosted Agent mode)")
     parser.add_argument("--port", type=int, default=8088, help="Server port (default: 8088)")
     args = parser.parse_args()
@@ -658,14 +658,14 @@ if __name__ == "__main__":
             })
 
         async def handle_health(request: Request) -> Response:
-            return JSONResponse({"status": "healthy", "agent": "skillsentinel-dispatcher"})
+            return JSONResponse({"status": "healthy", "agent": "fabric365-dispatcher"})
 
         app = Starlette(routes=[
             Route("/responses", handle_responses, methods=["POST"]),
             Route("/health", handle_health, methods=["GET"]),
         ])
 
-        print(f"\n  SkillSentinel — Hosted Agent Mode")
+        print(f"\n  Fabric 365 — Hosted Agent Mode")
         print(f"  Listening on http://0.0.0.0:{args.port}")
         print(f"  POST /responses | GET /health\n")
         uvicorn.run(app, host="0.0.0.0", port=args.port)

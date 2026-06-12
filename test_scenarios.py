@@ -1,5 +1,5 @@
 """
-SkillSentinel — Evaluation Framework
+Fabric 365 — Evaluation Framework
 
 Runs predefined test scenarios and validates agent outputs against expected criteria.
 Produces a score report for observability and quality assurance.
@@ -180,7 +180,7 @@ def run_evaluation():
     total_time = 0
 
     print("\n" + "=" * 60)
-    print("  SkillSentinel — Evaluation Framework")
+    print("  Fabric 365 — Evaluation Framework")
     print("  Running test scenarios...")
     print("=" * 60 + "\n")
 

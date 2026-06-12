@@ -1,7 +1,7 @@
 kind: hosted
-name: skillsentinel-dispatcher
+name: fabric365-dispatcher
 description: |
-  SkillSentinel: Multi-agent enterprise certification readiness system.
+  Fabric 365: Multi-agent enterprise certification readiness system.
   8 specialized agents with Chain-of-Thought reasoning, ADORE RAG retrieval,
   source-grounding mandates, and a governance pipeline (Policy Guard + Verifier).
   Integrates all three Microsoft IQ layers: Foundry IQ (Azure AI Search),

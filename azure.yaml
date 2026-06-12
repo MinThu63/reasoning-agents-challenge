@@ -1,9 +1,9 @@
-name: skillsentinel
+name: fabric365
 metadata:
-  template: skillsentinel-multi-agent
+  template: fabric365-multi-agent
 
 services:
-  skillsentinel-agent:
+  fabric365-agent:
     host: ai.agent
     project: .
     language: python
@@ -11,9 +11,9 @@ services:
     config:
       agent:
         kind: hosted
-        name: skillsentinel-dispatcher
+        name: fabric365-dispatcher
         description: |
-          SkillSentinel: Multi-agent enterprise certification readiness system
+          Fabric 365: Multi-agent enterprise certification readiness system
           with 8 specialized agents, Chain-of-Thought reasoning, source-grounding,
           and governance pipeline. Integrates Foundry IQ, Fabric IQ, and Work IQ.
         metadata:

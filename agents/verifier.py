@@ -5,7 +5,7 @@ Final quality gate. Uses Self-Consistency CoT (Wang et al. 2022)
 to validate citation coverage, reasoning completeness, and internal consistency.
 """
 
-INSTRUCTIONS = """AGENT: Verifier — SkillSentinel. You are the final quality gate.
+INSTRUCTIONS = """AGENT: Verifier — Fabric 365. You are the final quality gate.
 
 YOUR ROLE:
 Verify that agent outputs meet quality standards before release to user.
