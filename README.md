@@ -76,6 +76,31 @@ USER REQUEST
          Curator → Study Plan → Engagement
                  ↓
          🔒 Human Approval Gate
+```
+
+### When Single Agent vs. Multi-Agent Chain
+
+**Single agent** — the request maps cleanly to one specialist:
+
+| User Says | Agent Called | Why Single |
+|---|---|---|
+| "What certs should a Cloud Engineer get?" | Curator only | Just needs role → cert mapping |
+| "How is TEAM-D doing?" | Manager Insights only | Just needs team aggregation |
+| "Give me practice questions for AZ-400" | Assessment only | Just needs question generation |
+| "When should EMP-056 study?" | Engagement only | Just needs schedule suggestion |
+| "Create a study plan for EMP-034" | Study Plan only | Employee + cert already known |
+
+**Multi-agent chain** — the request requires sequential output from multiple agents because each needs the previous one's result:
+
+| User Says | Chain Triggered | Why Chain |
+|---|---|---|
+| "Help me prepare for AZ-204" | Curator → Study Plan → Engagement | Need to know WHAT to study → WHEN to study it → HOW to stay on track |
+| "Get me end to end ready" | Curator → Study Plan → Engagement | Same: resources → schedule → reminders |
+| "Am I ready for the exam?" | Assessment → Study Plan | Need readiness score → if NOT_READY, revise the plan |
+
+**Chain trigger keywords:** `prepare`, `full plan`, `help me get ready`, `end to end`, `am i ready`, `readiness check`, `should i take the exam`
+
+**Why chaining matters:** The Study Plan Generator can't build a schedule without knowing which skill domains to cover (Curator's job). The Engagement Agent can't schedule reminders without a plan to attach them to (Study Plan's job). Each agent's output becomes the next agent's input.
                  ↓
 ┌──────────────────────────────────────────┐
 │  🛡️ Policy Guard (5-Layer)              │
