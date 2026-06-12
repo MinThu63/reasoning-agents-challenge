@@ -142,18 +142,6 @@ with st.sidebar:
 
     st.divider()
 
-    # System Status
-    st.markdown("**System Status**")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("🟢 Foundry Model")
-        st.markdown("🟢 AI Search")
-    with col2:
-        st.markdown("🟢 Learn API")
-        st.markdown("🟢 Pipeline")
-
-    st.divider()
-
     # Clear current chat button
     if st.button("🗑️ Clear Current Chat", use_container_width=True):
         st.session_state.chats[st.session_state.active_chat] = {"messages": [], "context": {"employee_id": None, "team_id": None, "certification": None, "role": None}}
@@ -353,7 +341,7 @@ def run_streamlit_pipeline(user_message: str, status_container) -> dict:
 
 # Show starter prompts if chat is empty
 if not st.session_state.messages:
-    st.markdown("**Try one of these to get started:**")
+    st.markdown("**Try one of these to get started or ask anything:**")
     cols = st.columns(3)
     starter_prompts = [
         "What certs should a Cloud Engineer get?",
