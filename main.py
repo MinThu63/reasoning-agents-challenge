@@ -519,7 +519,8 @@ def run_pipeline(client: OpenAI, user_message: str, context: dict) -> str:
         agent_output = call_single_agent(client, agent_key, user_message, context, audit)
 
     # Step 3: Human Approval Gate (for study plan modifications)
-    if agent_key == "study_plan" or (chain and "study_plan" in chain):
+    # Skip in test mode (when TEST_MODE env var is set)
+    if not os.getenv("TEST_MODE") and (agent_key == "study_plan" or (chain and "study_plan" in chain)):
         print("\n  🔒 Human Approval Gate: Study plan generated.")
         approval = input("     Approve this plan? [Y/n]: ").strip().lower()
         if approval == "n":
