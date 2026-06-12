@@ -68,6 +68,10 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+    .stMainBlockContainer {
+        max-width: 800px;
+        margin: 0 auto;
+    }
     .agent-badge {
         display: inline-block;
         padding: 4px 12px;
