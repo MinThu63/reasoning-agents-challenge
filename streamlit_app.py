@@ -57,7 +57,7 @@ from main import (
 
 st.set_page_config(
     page_title="Fabric 365",
-    page_icon="🛡️",
+    page_icon="F",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -106,7 +106,7 @@ st.markdown("""
 # ============================================================
 
 with st.sidebar:
-    st.title("🛡️ Fabric 365")
+    st.title("Fabric 365")
     st.caption("Enterprise Certification Readiness")
 
     st.divider()
@@ -178,7 +178,7 @@ def render_agent_badge(agent_key: str, extra: str = ""):
 # Main Chat Interface
 # ============================================================
 
-st.title("🛡️ Fabric 365")
+st.title("Fabric 365")
 st.markdown("*Enterprise Certification Readiness — 8 Agents · 10 Reasoning Techniques · Governance Pipeline*")
 
 # Initialize session state
@@ -199,7 +199,7 @@ st.session_state.context = active["context"]
 
 # Display chat history
 for idx, message in enumerate(st.session_state.messages):
-    with st.chat_message(message["role"], avatar="👤" if message["role"] == "user" else "🛡️"):
+    with st.chat_message(message["role"], avatar="👤" if message["role"] == "user" else "🤖"):
         if message["role"] == "assistant" and "agent_key" in message:
             render_agent_badge(message["agent_key"], message.get("time_str", ""))
         st.markdown(message["content"])
@@ -308,8 +308,8 @@ def run_streamlit_pipeline(user_message: str, status_container) -> dict:
         agent_output = call_single_agent(client, agent_key, user_message, context, audit)
 
     # Step 3: Governance
-    status_container.markdown("🛡️ **Governance** — Policy Guard + Verifier...")
-    pipeline_steps.append("🛡️ Policy Guard (5-layer) + Verifier...")
+    status_container.markdown("**Governance** — Policy Guard + Verifier...")
+    pipeline_steps.append("Policy Guard (5-layer) + Verifier...")
     effective_key = chain[0] if chain else agent_key
     blocked, final_output = run_governance(client, agent_output, effective_key, user_message, context, audit)
 
@@ -370,7 +370,7 @@ if prompt:
         st.markdown(prompt)
 
     # Generate response with live status
-    with st.chat_message("assistant", avatar="🛡️"):
+    with st.chat_message("assistant", avatar="🤖"):
         status_placeholder = st.empty()
         start = time.time()
 

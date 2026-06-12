@@ -410,9 +410,7 @@ Deployment artifacts included: `Dockerfile`, `azure.yaml`, `agent.manifest.yaml`
 
 ## 🌍 Why This Approach
 
-The challenge asks for reasoning agents that demonstrate multi-step thinking. Many submissions will build a chatbot that answers certification questions. Fabric 365 takes a different position:
-
-**The system doesn't just answer — it reasons, validates, and proves its work.**
+Fabric 365 doesn't just answer — it reasons, validates, and proves its work.
 
 Every output is:
 - **Grounded** — cited to a source file or live API result
@@ -421,7 +419,7 @@ Every output is:
 - **Auditable** — full JSON trail saved for every pipeline run
 - **Adaptive** — revises conclusions when new information contradicts prior assumptions
 
-This is what enterprise AI looks like. Not "ask the model and hope" — but structured reasoning with safety rails, human oversight, and traceable decisions.
+Structured reasoning with safety rails, human oversight, and traceable decisions.
 
 ---
 
