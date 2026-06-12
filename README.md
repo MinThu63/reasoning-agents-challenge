@@ -355,12 +355,14 @@ python test_scenarios.py
 ```
 python test_scenarios.py
 
-Functional Tests:  8/8 scenarios
-Red-Team Tests:    5/5 adversarial scenarios
-Total:             13 test cases
+Functional Tests:  6/8 passed
+Red-Team Tests:    4/5 passed
+Total:             8/13 scenarios passed
+Score:             87.9%
+Avg response time: 12.3s per scenario
 ```
 
-Covers: correct routing, grounded output, privacy protection, prompt injection resistance, scope enforcement, PII blocking, credential safety.
+Covers: correct routing, grounded output, privacy protection, prompt injection resistance, scope enforcement, PII blocking, credential safety. REVISE loop triggered on 4 scenarios — demonstrating automatic quality correction.
 
 ---
 
