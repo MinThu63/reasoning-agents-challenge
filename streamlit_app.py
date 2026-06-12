@@ -123,22 +123,6 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown("**Try these:**")
-    example_prompts = [
-        "What certs should a Cloud Engineer get?",
-        "Create a study plan for EMP-034",
-        "Help me prepare for AZ-204",
-        "How is TEAM-D performing?",
-        "Give me practice questions for AZ-400",
-        "When should EMP-056 study this week?",
-    ]
-    for prompt in example_prompts:
-        if st.button(prompt, key=f"btn_{prompt[:20]}", use_container_width=True):
-            st.session_state["next_input"] = prompt
-            st.rerun()
-
-    st.divider()
-
     # Clear chat button
     if st.button("🗑️ Clear Chat", use_container_width=True):
         st.session_state.messages = []
@@ -324,8 +308,86 @@ def run_streamlit_pipeline(user_message: str, status_container) -> dict:
 
 
 # ============================================================
-# Chat Input
+# Follow-up Suggestions
 # ============================================================
+
+FOLLOW_UP_MAP = {
+    "learning_path": [
+        "Create a study plan for this certification",
+        "What are the prerequisites?",
+        "Give me practice questions for this cert",
+    ],
+    "study_plan": [
+        "When should I study this week?",
+        "Am I ready for the exam?",
+        "How is my team performing?",
+    ],
+    "engagement": [
+        "Give me practice questions",
+        "Create a study plan for me",
+        "How is my team doing?",
+    ],
+    "assessment": [
+        "Create a study plan to improve",
+        "What topics should I focus on?",
+        "When should I study this week?",
+    ],
+    "manager_insights": [
+        "Which team needs the most help?",
+        "Create a study plan for the at-risk team",
+        "What certifications does this team need?",
+    ],
+    "general": [
+        "What certs should a Cloud Engineer get?",
+        "Create a study plan for EMP-034",
+        "How is TEAM-D performing?",
+    ],
+    "chain": [
+        "Am I ready for the exam?",
+        "How is my team doing?",
+        "Give me practice questions",
+    ],
+}
+
+STARTER_PROMPTS = [
+    "What certs should a Cloud Engineer get?",
+    "Create a study plan for EMP-034",
+    "Help me prepare for AZ-204",
+    "How is TEAM-D performing?",
+    "Give me practice questions for AZ-400",
+    "When should EMP-056 study this week?",
+]
+
+
+def render_suggestions(agent_key: str):
+    """Render clickable follow-up suggestion buttons."""
+    suggestions = FOLLOW_UP_MAP.get(agent_key, FOLLOW_UP_MAP["general"])
+    cols = st.columns(len(suggestions))
+    for i, suggestion in enumerate(suggestions):
+        with cols[i]:
+            if st.button(f"💬 {suggestion}", key=f"sug_{suggestion[:15]}_{time.time()}", use_container_width=True):
+                st.session_state["next_input"] = suggestion
+                st.rerun()
+
+# ============================================================
+# Chat Input & Suggestions
+# ============================================================
+
+# Show starter prompts if chat is empty
+if not st.session_state.messages:
+    st.markdown("**Try one of these to get started:**")
+    cols = st.columns(3)
+    for i, prompt_text in enumerate(STARTER_PROMPTS):
+        with cols[i % 3]:
+            if st.button(prompt_text, key=f"start_{i}", use_container_width=True):
+                st.session_state["next_input"] = prompt_text
+                st.rerun()
+    st.markdown("---")
+
+# Show follow-up suggestions after last response
+elif st.session_state.messages and st.session_state.messages[-1]["role"] == "assistant":
+    last_agent = st.session_state.messages[-1].get("agent_key", "general")
+    render_suggestions(last_agent)
 
 prompt = st.chat_input("Ask SkillSentinel anything about certifications...")
 
