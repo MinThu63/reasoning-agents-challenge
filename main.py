@@ -343,8 +343,9 @@ def call_single_agent(client: OpenAI, agent_key: str, user_message: str, context
     return response
 
 
-def run_governance(client: OpenAI, agent_output: str, audit: AuditTrail) -> tuple:
-    """Run Policy Guard + Verifier. Returns (is_blocked, final_output)."""
+def run_governance(client: OpenAI, agent_output: str, agent_key: str, user_message: str, context: dict, audit: AuditTrail, retry_count: int = 0) -> tuple:
+    """Run Policy Guard + Verifier with REVISE loop. Returns (is_blocked, final_output)."""
+    MAX_REVISIONS = 1  # Allow one revision attempt
 
     # Policy Guard
     guard_prompt = build_prompt(POLICY_GUARD_INSTRUCTIONS)
@@ -369,22 +370,47 @@ def run_governance(client: OpenAI, agent_output: str, audit: AuditTrail) -> tupl
     if blocked:
         return True, "⚠️ Response blocked by Policy Guard due to policy violations."
 
-    # Verifier
+    # Verifier with adaptive thresholds per agent type
+    AGENT_THRESHOLDS = {
+        "assessment": 90,
+        "learning_path": 85,
+        "study_plan": 85,
+        "manager_insights": 80,
+        "engagement": 70,
+    }
+    threshold = AGENT_THRESHOLDS.get(agent_key, 85)
+
     verifier_prompt = build_prompt(VERIFIER_INSTRUCTIONS)
-    verifier_input = f"VERIFY THIS AGENT OUTPUT:\n{agent_output}"
+    verifier_input = f"VERIFY THIS AGENT OUTPUT (citation threshold: {threshold}%):\n{agent_output}"
     verifier_result = call_llm(client, verifier_prompt, verifier_input)
 
     verdict = "APPROVED"
+    issues = []
     try:
         ver_clean = verifier_result.strip()
         if ver_clean.startswith("```"):
             ver_clean = ver_clean.split("\n", 1)[1].rsplit("```", 1)[0]
         ver_json = json.loads(ver_clean)
         verdict = ver_json.get("verdict", "APPROVED")
+        issues = ver_json.get("issues", [])
     except (json.JSONDecodeError, IndexError, ValueError):
         verdict = "PARSE_ERROR_PASS"
 
-    audit.log("VERIFIER", {"verdict": verdict})
+    audit.log("VERIFIER", {"verdict": verdict, "issues": issues, "threshold": threshold})
+
+    # REVISE loop: re-call the agent with revision guidance
+    if verdict == "REVISE" and retry_count < MAX_REVISIONS:
+        revision_note = f"REVISION REQUESTED by Verifier. Issues: {issues}. Please fix these issues and respond again."
+        print(f"\n  🔄 Verifier: REVISE — re-calling agent with corrections...")
+
+        config = AGENT_CONFIG.get(agent_key, AGENT_CONFIG["learning_path"])
+        iq_context = config["context_builder"](context)
+        iq_context += f"\n\n--- REVISION GUIDANCE ---\n{revision_note}\n\nYOUR PREVIOUS OUTPUT (fix the issues above):\n{agent_output}"
+        agent_prompt = build_prompt(config["instructions"], iq_context)
+        revised_output = call_llm(client, agent_prompt, user_message)
+
+        audit.log("REVISE_LOOP", {"retry": retry_count + 1, "issues": issues})
+        return run_governance(client, revised_output, agent_key, user_message, context, audit, retry_count + 1)
 
     return False, agent_output
 
@@ -418,6 +444,21 @@ def run_pipeline(client: OpenAI, user_message: str, context: dict) -> str:
         context["certification"] = routing["certification"]
 
     agent_key = routing.get("agent", "learning_path")
+
+    # Handle low confidence — ask for clarification
+    confidence = routing.get("confidence", 1.0)
+    if isinstance(confidence, str):
+        try:
+            confidence = float(confidence)
+        except:
+            confidence = 1.0
+
+    if confidence < 0.6 and agent_key != "general":
+        print(f"  ⚠️ Mission Control: Low confidence ({confidence}) — requesting clarification")
+        clarification = routing.get("direct_response", f"I'm not sure I understood correctly. Could you clarify? Did you mean to ask about: certification paths, study plans, practice questions, reminders, or team progress?")
+        audit.log("LOW_CONFIDENCE_CLARIFY", {"confidence": confidence, "original_agent": agent_key})
+        audit.finalize()
+        return clarification
 
     # Handle general/greeting messages directly
     if agent_key == "general":
@@ -474,9 +515,9 @@ def run_pipeline(client: OpenAI, user_message: str, context: dict) -> str:
             return "Study plan rejected. Please provide additional requirements or constraints."
         audit.log("HUMAN_GATE", {"action": "APPROVED"})
 
-    # Step 4: Governance (Policy Guard + Verifier)
+    # Step 4: Governance (Policy Guard + Verifier + REVISE loop)
     print("  🛡️ Running governance checks...", end=" ", flush=True)
-    blocked, final_output = run_governance(client, agent_output, audit)
+    blocked, final_output = run_governance(client, agent_output, agent_key, user_message, context, audit)
     if blocked:
         print("BLOCKED")
         audit.finalize()

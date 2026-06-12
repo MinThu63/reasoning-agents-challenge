@@ -64,7 +64,15 @@ OUTPUT FORMAT (strict JSON):
   "employee_id": "EMP-XXX" or null,
   "team_id": "TEAM-X" or null,
   "certification": "XX-XXX" or null,
+  "confidence": 0.0-1.0,
   "reasoning": "one sentence explaining the routing decision",
   "direct_response": null or "friendly reply if agent is general"
 }
+
+CONFIDENCE SCORING:
+- 1.0: Message clearly matches exactly one agent (e.g., "Give me practice questions for AZ-400")
+- 0.8: Strong match but some ambiguity (e.g., "Help me with AZ-204")
+- 0.6: Could go to multiple agents (e.g., "Help me prepare" — could be plan or curator)
+- 0.4: Very unclear intent, defaulting to best guess
+- If confidence < 0.6, set agent to "general" and include a clarification in direct_response
 """
