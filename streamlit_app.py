@@ -111,6 +111,28 @@ with st.sidebar:
 
     st.divider()
 
+    # Chat management
+    if "chats" not in st.session_state:
+        st.session_state.chats = {"Chat 1": {"messages": [], "context": {"employee_id": None, "team_id": None, "certification": None, "role": None}}}
+        st.session_state.active_chat = "Chat 1"
+
+    if st.button("➕ New Chat", use_container_width=True):
+        chat_num = len(st.session_state.chats) + 1
+        name = f"Chat {chat_num}"
+        st.session_state.chats[name] = {"messages": [], "context": {"employee_id": None, "team_id": None, "certification": None, "role": None}}
+        st.session_state.active_chat = name
+        st.rerun()
+
+    st.markdown("**Chats**")
+    for chat_name in st.session_state.chats:
+        is_active = chat_name == st.session_state.active_chat
+        label = f"💬 **{chat_name}**" if is_active else f"💬 {chat_name}"
+        if st.button(label, key=f"chat_{chat_name}", use_container_width=True):
+            st.session_state.active_chat = chat_name
+            st.rerun()
+
+    st.divider()
+
     # System Status
     st.markdown("**System Status**")
     col1, col2 = st.columns(2)
@@ -123,10 +145,9 @@ with st.sidebar:
 
     st.divider()
 
-    # Clear chat button
-    if st.button("🗑️ Clear Chat", use_container_width=True):
-        st.session_state.messages = []
-        st.session_state.context = {"employee_id": None, "team_id": None, "certification": None, "role": None}
+    # Clear current chat button
+    if st.button("🗑️ Clear Current Chat", use_container_width=True):
+        st.session_state.chats[st.session_state.active_chat] = {"messages": [], "context": {"employee_id": None, "team_id": None, "certification": None, "role": None}}
         st.rerun()
 
     st.divider()
@@ -164,10 +185,20 @@ st.title("🛡️ SkillSentinel")
 st.markdown("*Enterprise Certification Readiness — 8 Agents · 10 Reasoning Techniques · Governance Pipeline*")
 
 # Initialize session state
+if "chats" not in st.session_state:
+    st.session_state.chats = {"Chat 1": {"messages": [], "context": {"employee_id": None, "team_id": None, "certification": None, "role": None}}}
+    st.session_state.active_chat = "Chat 1"
+
+# Point to active chat
+active = st.session_state.chats[st.session_state.active_chat]
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = active["messages"]
 if "context" not in st.session_state:
-    st.session_state.context = {"employee_id": None, "team_id": None, "certification": None, "role": None}
+    st.session_state.context = active["context"]
+
+# Sync active chat
+st.session_state.messages = active["messages"]
+st.session_state.context = active["context"]
 
 # Display chat history
 for idx, message in enumerate(st.session_state.messages):
