@@ -6,7 +6,7 @@ Fabric 365 evaluates Microsoft certification readiness by grounding outputs in a
 
 **Microsoft AI Skills Fest · Agent League · Battle #2: Reasoning Agents with Microsoft Foundry**
 
-**[Live Demo →](https://reasoning-agents-challenge-cccgguvd3had4mdkdbxrnw.streamlit.app/)**
+**[Live Demo →](https://reasoning-agents-challenge-cccgguvd3had4mdkdbxrnw.streamlit.app/)** | **[Demo Video →](https://youtu.be/a6Qbmy3l9BA)**
 
 ---
 
