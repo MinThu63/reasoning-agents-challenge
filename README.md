@@ -436,7 +436,7 @@ Structured reasoning with safety rails, human oversight, and traceable, Microsof
 
 ## 👥 Duo
 
-- KYAW MIN THU, XIAOEN TOH
+- KYAW MIN THU (MinThu63), XIAOEN TOH (tohxiaoen)
 -REPUBLIC POLYTECHNIC, SINGAPORE
 ---
 
