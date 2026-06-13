@@ -1,108 +1,129 @@
 # Fabric 365
 
-**The enterprise certification system that reasons, not just retrieves.**
+**Enterprise certification readiness that reasons, not just retrieves.**
 
-Proves whether employees are ready for Microsoft certifications — by grounding every recommendation in approved knowledge, adapting to real workload constraints, and blocking unsafe outputs before they reach the user.
+Fabric 365 evaluates Microsoft certification readiness by grounding outputs in approved content, adapting plans to workload, and enforcing governance before results reach users.
 
-🏆 Microsoft AI Skills Fest · Agent League · Battle #2: Reasoning Agents with Microsoft Foundry
+**Microsoft AI Skills Fest · Agent League · Battle #2: Reasoning Agents with Microsoft Foundry**
 
-🎬 **[Live Demo →](https://reasoning-agents-challenge-cccgguvd3had4mdkdbxrnw.streamlit.app/)**
-
----
-
-## 30-Second Judge Proof
-
-Fabric 365 is not a chatbot that answers certification questions. It is a **governance-first reasoning pipeline** where every response passes through 8 specialized agents, a 5-layer safety gate, and a self-consistency verifier before reaching the user.
-
-- **Problem:** Enterprise teams waste months on generic study plans that ignore workload, fail to track readiness, and produce uncited recommendations that cannot be audited.
-- **Why agents:** The decision requires role mapping, prerequisite sequencing, capacity-aware scheduling, work-pattern analysis, grounded assessment, team analytics, policy compliance, and quality verification. A single prompt cannot decompose this reliably.
-- **Workflow:** 8 specialist agents with sequential chaining, governed by universal constraints.
-- **Tools:** Live Azure AI Search (Foundry IQ) + Microsoft Learn API — real external calls, not simulations.
-- **Safety:** Policy Guard blocks PII, credentials, injection, scope violations. Verifier rejects outputs below citation threshold and triggers automatic revision.
-- **Human control:** Study plans require explicit user approval. Low-confidence routing asks for clarification instead of guessing.
+**[Live Demo →](https://reasoning-agents-challenge-cccgguvd3had4mdkdbxrnw.streamlit.app/)**
 
 ---
 
-## 🎯 The Problem
+## Judge Snapshot
 
-Every organization running a certification program hits the same issues:
+Fabric 365 is an **8‑agent reasoning system**, not a single chatbot.
+
+- **Problem:** Certification programs rely on generic plans, weak readiness signals, and uncited AI advice.
+- **Why multi‑agent:** Needs role mapping, prerequisites, capacity‑aware planning, engagement timing, grounded assessment, team analytics, and safety checks.
+- **Architecture:** 8 focused agents coordinated through routed, sequential workflows.
+- **Grounding:** Live Azure AI Search + Microsoft Learn for cited, approved content.
+- **Safety:** Policy Guard screens PII, credentials, injection, and scope violations.
+- **Quality:** Verifier checks citations, completeness, and consistency before release.
+- **Human oversight:** Study plans require approval; low‑confidence routing asks for clarification.
+
+---
+
+## The Problem
 
 | Pain Point | Reality |
 |---|---|
-| 📋 Generic study plans | Ignore that EMP-034 has 21 meeting hours/week and can't study mornings |
-| 🎯 No readiness signal | Managers don't know who's actually ready vs. who's just "studying" |
-| 🤖 Hallucinated advice | AI recommends resources that don't exist or aren't approved |
-| 📊 No team visibility | No aggregate view of which teams are at risk and why |
-| ⏰ One-size-fits-all | Same reminders sent to the overloaded engineer and the one with free time |
-| 🔐 No safety gate | AI outputs go directly to users with no compliance check |
+| Generic plans | Ignore workload and realistic study windows |
+| No readiness signal | Managers see “studying,” not exam readiness |
+| Ungrounded AI | Recommends uncited or unapproved resources |
+| No team view | Hard to see which teams are at risk and why |
+| Uniform reminders | Same nudges for overloaded and free engineers |
+| No gate | Outputs reach users without compliance review |
 
 ---
 
-## 💡 The Solution
+## The Solution
 
-Fabric 365 decomposes certification readiness into **8 specialist agents** that reason step-by-step, ground every claim in approved sources, and pass through governance before reaching the user.
+Fabric 365 decomposes readiness into **8 specialist agents** with clear roles and governed hand‑offs.
 
-| What Others Do | What Fabric 365 Does |
+| Typical Approach | Fabric 365 |
 |---|---|
-| Single chatbot with a long prompt | 8 specialized agents with distinct reasoning |
-| One-shot retrieval | ADORE iterative 3-round retrieval |
-| "Think step by step" | 10 named reasoning techniques with citations |
-| Trust the output | 5-layer Policy Guard + Verifier + REVISE loop |
-| Static plans | Capacity-aware, workload-adapted, nonmonotonically revised |
-| Hope it's grounded | Every claim must cite source or gets flagged |
+| One chatbot | 8 specialized reasoning agents |
+| One‑shot retrieval | Iterative, evidence‑first retrieval |
+| Vague “step‑by‑step” | Named reasoning patterns across agents |
+| Direct output | Policy Guard + Verifier before release |
+| Static plans | Workload‑aware, revisable schedules |
+| Assumed grounding | Every factual claim requires a source |
 
 ---
 
 ## 🧠 How It Works
 
-```
+Fabric 365 routes each request through Mission Control, then either one specialist agent or a chained 8‑agent flow.
+
+```text
 USER REQUEST
      ↓
-┌──────────────────────────────────────────┐
-│  🎯 Mission Control                      │
-│  ARM-CoT routing · confidence scoring    │
-│  Chain detection · context extraction    │
-└────────────────┬─────────────────────────┘
+┌───────────────────────────────────────────────┐
+│ 🎯 Mission Control                            │
+│ Intent classification · context extraction    │
+│ Confidence scoring · single vs. chain route   │
+└────────────────┬──────────────────────────────┘
                  ↓
-┌─ SPECIALIST AGENTS ──────────────────────────────────────┐
-│                                                          │
-│  📚 Learning Path Curator    (Foundry IQ · ADORE RAG)   │
-│  📅 Study Plan Generator     (Fabric IQ · Analogical)   │
-│  ⏰ Engagement Agent         (Work IQ · Nonmonotonic)   │
-│  📝 Assessment Agent         (Foundry IQ · Claim-Graph) │
-│  📊 Manager Insights         (Abductive Reasoning)      │
-│                                                          │
-└──────────────────────────────────────────────────────────┘
+      ┌──────────┴──────────┐
+      ↓                     ↓
+SINGLE-AGENT PATH      MULTI-AGENT PATH
+
+┌───────────────────────────────────────────────┐
+│ SPECIALIST AGENTS                             │
+│                                               │
+│ 📚 Learning Path Curator                      │
+│   Role → certification mapping                │
+│   Skills & resources (Foundry IQ + Learn)     │
+│                                               │
+│ 📅 Study Plan Generator                       │
+│   Weekly milestones · hours allocation        │
+│   Capacity-aware scheduling (Fabric IQ)       │
+│                                               │
+│ ⏰ Engagement Agent                           │
+│   Reminder timing · work‑pattern adaptation   │
+│   Progress nudges (Work IQ)                   │
+│                                               │
+│ 📝 Assessment Agent                           │
+│   Grounded questions · readiness scoring      │
+│   Weak-domain detection (Foundry IQ)          │
+│                                               │
+│ 📊 Manager Insights Agent                     │
+│   Team readiness · risk patterns              │
+│   Aggregate recommendations (Fabric + Work)   │
+└───────────────────────────────────────────────┘
                  ↓
-         🔗 Multi-Agent Chain (when needed)
-         Curator → Study Plan → Engagement
-                 ↓
-         🔒 Human Approval Gate
+   🔗 CHAINED OUTPUT (when needed)
+   Curator → Study Plan → Engagement
+   Assessment → Study Plan
+   Curator → Study Plan → Manager Insights
 ```
 
-### When Single Agent vs. Multi-Agent Chain
+### Routing
 
-**Single agent** — the request maps cleanly to one specialist:
+**Single agent** when one task is enough:
 
-| User Says | Agent Called | Why Single |
+| User Request | Agent | Why |
 |---|---|---|
-| "What certs should a Cloud Engineer get?" | Curator only | Just needs role → cert mapping |
-| "How is TEAM-D doing?" | Manager Insights only | Just needs team aggregation |
-| "Give me practice questions for AZ-400" | Assessment only | Just needs question generation |
-| "When should EMP-056 study?" | Engagement only | Just needs schedule suggestion |
-| "Create a study plan for EMP-034" | Study Plan only | Employee + cert already known |
+| “What certs for a Cloud Engineer?” | Curator | Role → certs |
+| “How is TEAM-D doing?” | Manager Insights | Team view only |
+| “Practice questions for AZ‑400” | Assessment | Question set only |
+| “When should EMP‑056 study?” | Engagement | Schedule only |
+| “Create a study plan for EMP‑034” | Study Plan | Plan only |
 
-**Multi-agent chain** — the request requires sequential output from multiple agents because each needs the previous one's result:
+**Multi‑agent chain** when steps depend on each other:
 
-| User Says | Chain Triggered | Why Chain |
+| User Request | Chain | Why |
 |---|---|---|
-| "Help me prepare for AZ-204" | Curator → Study Plan → Engagement | Need to know WHAT to study → WHEN to study it → HOW to stay on track |
-| "Get me end to end ready" | Curator → Study Plan → Engagement | Same: resources → schedule → reminders |
-| "Am I ready for the exam?" | Assessment → Study Plan | Need readiness score → if NOT_READY, revise the plan |
+| “Help me prepare for AZ‑204” | Curator → Study Plan → Engagement | What → plan → reminders |
+| “Get me end‑to‑end ready” | Curator → Study Plan → Engagement | Full preparation flow |
+| “Am I ready for the exam?” | Assessment → Study Plan | Score → adjust plan |
+| “Build a certification path for my team” | Curator → Study Plan → Manager Insights | Content → schedules → team view |
 
-**Chain trigger keywords:** `prepare`, `full plan`, `help me get ready`, `end to end`, `am i ready`, `readiness check`, `should i take the exam`
+**Chain triggers:** `prepare`, `full plan`, `get ready`, `end to end`, `study path`, `am I ready`, `readiness check`, `should I take the exam`, `team plan`.
 
-**Why chaining matters:** The Study Plan Generator can't build a schedule without knowing which skill domains to cover (Curator's job). The Engagement Agent can't schedule reminders without a plan to attach them to (Study Plan's job). Each agent's output becomes the next agent's input.
+**Why chaining:**  
+Curator defines **what**, Study Plan defines **when**, Engagement drives **follow‑through**, Assessment checks **readiness**, Manager Insights shows **team risk**.
 
 ### Governance Pipeline (runs on every response)
 
@@ -146,95 +167,85 @@ Every pipeline run produces a full JSON audit log with: routing decision, agent 
 
 ### 1. Mission Control Agent — Orchestrator & Router
 
-- **Function:** Classifies user intent using ARM-pattern Chain-of-Thought routing. Extracts context (employee ID, team, certification, role). Detects complex requests requiring multi-agent chains. Handles greetings directly. Outputs a confidence score — if below 0.6, asks for clarification instead of guessing.
-- **Required input:** User message (natural language), optional prior conversation context.
-- **Desired output:** Routing decision with target agent, extracted context fields, confidence score (0.0–1.0), and reasoning trace.
-- **Rejection agent:** Self-contained — does not produce domain answers.
-- **Conditions:** Never answers domain questions directly. If confidence < 0.6, returns clarification request. If greeting or out-of-scope small talk, responds directly without calling sub-agents.
+- **Function:** Classifies intent, extracts context, detects chain-worthy requests, and routes to the right agent. Uses ARM-pattern reasoning and returns a confidence score.
+- **Input:** User request, optional conversation context.
+- **Output:** Target agent, extracted fields, confidence score, reasoning trace.
+- **Conditions:** Never answers domain questions directly. If confidence < 0.6, asks for clarification. Handles greetings and small talk without calling sub-agents.
 
 ---
 
 ### 2. Learning Path Curator Agent — Microsoft Learn / Exam-Tailored
 
-- **Function:** Maps a Microsoft role-based certification target to the correct Microsoft Learn exam path, skills measured domains, prerequisite/foundation suggestions, and approved learning resources. Grounds all recommendations in the Engineering Certification Guide and live Microsoft Learn Search API results.
-- **Required input:** Role, target_certification, experience_level (inferred from learner data), available_hours_per_week (from Work IQ if employee provided), optionally known_skill_gaps.
-- **Desired output:** Ordered learning path with certification, exam focus domains, domain-level learning resources, study sequence, estimated hours, and source citations from Microsoft Learn / engineering_certification_guide.md.
-- **Rejection agent:** Policy Guard Agent.
-- **Conditions:** Reject if the certification code is unknown, if no approved Microsoft Learn-aligned resource is found, or if the request asks for brain dumps / exam cheating content instead of legitimate prep. Flag skill domains with no approved source as `NO_APPROVED_SOURCE`.
+- **Function:** Maps role and certification goals to the right Microsoft Learn path, skills measured, prerequisites, and approved resources.
+- **Input:** Role, target certification, experience level, available study hours, optional skill gaps.
+- **Output:** Ordered learning path, domains, resources, study sequence, estimated hours, source citations.
+- **Conditions:** Rejects unknown certifications, unsupported resources, and cheating requests. Flags unsupported domains as `NO_APPROVED_SOURCE`.
 
 ---
 
 ### 3. Study Plan Generator Agent — Capacity-Aware Scheduling
 
-- **Function:** Converts a learning path into a personalized, week-by-week study schedule that accounts for the employee's meeting load, focus hours, calendar fragmentation, preferred learning slot, and prior progress. Compares to similar learner profiles (analogical reasoning) and revises plans when new constraints emerge (nonmonotonic reasoning).
-- **Required input:** Certification target, employee_id (for Work IQ signals), deadline (optional), prior learner progress data.
-- **Desired output:** Week-by-week milestone plan with topics, target practice scores, hours per week, capacity risk assessment (LOW/MED/HIGH), recommended study slot, buffer week, and fallback path if behind schedule.
-- **Rejection agent:** Policy Guard Agent.
-- **Conditions:** Reject if employee_id is not found in work signals (returns ASSUMPTION FLAG with default plan). Flag as CRITICAL_RISK if meeting hours >20 and available focus hours <2 — never generate a plan that's physically impossible given workload. Revise standard template if user provides constraints that contradict it.
+- **Function:** Converts the learning path into a realistic weekly study plan using workload, focus hours, fragmentation, preferred slot, and prior progress.
+- **Input:** Certification target, employee ID, optional deadline, learner progress.
+- **Output:** Weekly milestones, target scores, hours per week, risk level, study slot, buffer week, fallback path.
+- **Conditions:** Flags missing work data with `ASSUMPTION FLAG`. Marks impossible schedules as `CRITICAL_RISK`. Revises plans when new constraints appear.
 
 ---
 
 ### 4. Engagement Agent — Work-Context Reminders
 
-- **Function:** Keeps learners progressing by generating personalized, context-aware reminder schedules. Identifies study-safe windows that don't conflict with meetings or high-collaboration periods. Adapts tone based on progress state. Defines escalation triggers when current strategy isn't working.
-- **Required input:** Employee work pattern (meeting hours, focus blocks, preferred slot, fragmentation score, collaboration messages/day), learner progress (practice score, plan completion %).
-- **Desired output:** Weekly reminder schedule with specific days/times/duration/topic, recommended tone (encouraging/empathetic/celebratory), sample reminder messages, escalation flag with reason if applicable.
-- **Rejection agent:** Policy Guard Agent.
-- **Conditions:** Reject if attempting to schedule before 08:00 or after 21:00, during known meeting blocks, or more than 2 reminders per day. If no work signal data exists, fall back to default schedule with explicit ASSUMPTION FLAG. Revise engagement strategy if progress data shows declining scores despite current approach (nonmonotonic revision).
+- **Function:** Generates personalized reminder schedules based on work rhythm, progress, and collaboration load.
+- **Input:** Work signals, progress score, completion status.
+- **Output:** Weekly reminder schedule, tone, sample messages, escalation flag.
+- **Conditions:** Rejects reminders before 08:00, after 21:00, during meetings, or above 2 per day. Falls back with `ASSUMPTION FLAG` if data is missing. Revises strategy if progress declines.
 
 ---
 
 ### 5. Assessment Agent — Grounded Question Generation
 
-- **Function:** Evaluates learner readiness by generating scenario-based practice questions grounded in the Engineering Certification Guide and Microsoft Learn content. Every question must map to a specific source passage — unsourced questions are discarded, not surfaced. Scores readiness against certification pass thresholds.
-- **Required input:** Target certification, skill domains (from cert data), learner's current practice score (if available).
-- **Desired output:** 5 scenario-based multiple-choice questions (A, B, C, D) each with source citation, correct answers with explanations, readiness assessment (READY / BORDERLINE / NOT_READY), and weak domain recommendations.
-- **Rejection agent:** Policy Guard Agent.
-- **Conditions:** DISCARD any question that cannot be mapped to a specific passage in the knowledge base. If fewer than 5 grounded questions can be generated, return what's available with a gap flag. Reject requests for actual exam answers, brain dumps, or exam cheating content. Citation threshold: 90% (highest of all agents).
+- **Function:** Generates grounded practice questions and evaluates readiness against certification thresholds.
+- **Input:** Certification target, skill domains, current practice score.
+- **Output:** 5 cited scenario questions, answer explanations, readiness rating, weak-domain recommendations.
+- **Conditions:** Discards any unsourced question. Returns fewer than 5 only with gap flag. Rejects brain dumps and cheating requests. Highest citation threshold: **90%**.
 
 ---
 
-### 6. Manager Insights Agent — Team Analytics & Abductive Reasoning
+### 6. Manager Insights Agent — Team Analytics
 
-- **Function:** Provides team-level visibility into certification readiness and workforce development. Calculates aggregate metrics, identifies systemic patterns, and hypothesizes root causes using abductive reasoning (not just reports numbers — explains WHY). Generates actionable recommendations targeting the hypothesized cause.
-- **Required input:** Team ID (optional — if omitted, reports on all teams). Uses aggregated learner performance and work signal data.
-- **Desired output:** Team health rating (🟢 GREEN / 🟡 YELLOW / 🔴 RED), aggregate metrics (pass rate, avg score, meeting hours, at-risk count), identified patterns, hypothesized causes (labeled as inferred), and actionable recommendations.
-- **Rejection agent:** Policy Guard Agent.
-- **Conditions:** BLOCK if output contains individual employee IDs, names, or personal scores in team summary. Redirect individual-person queries to aggregate view. Hypotheses must be labeled as inferred ("Most likely cause:") not stated as fact. Exclude null data fields from analytics with ASSUMPTION FLAG.
+- **Function:** Summarizes team readiness, identifies risk patterns, and suggests likely causes using abductive reasoning.
+- **Input:** Team ID or full-team view, aggregated learner and workload data.
+- **Output:** Team health rating, metrics, patterns, inferred causes, recommendations.
+- **Conditions:** Blocks employee-level data in team summaries. Labels hypotheses as inferred, not factual. Excludes null fields with `ASSUMPTION FLAG`.
 
 ---
 
 ### 7. Policy Guard Agent — 5-Layer Governance Gate
 
-- **Function:** Validates all agent outputs before they reach the user. Runs 5 sequential compliance layers. Acts as the defence-in-depth safety gate for the entire system.
-- **Required input:** Any agent output (passed automatically by pipeline).
-- **Desired output:** Layer-by-layer results (PASS/BLOCK/FLAG) and overall status (CLEARED / BLOCKED / FLAGGED).
-- **Layers:**
-  - Layer 1 — PII Scan: real names, emails, phone numbers → BLOCK
-  - Layer 2 — Credential Scan: API keys, tokens, passwords → BLOCK
-  - Layer 3 — Grounding Compliance: unsourced factual claims → FLAG for Verifier
-  - Layer 4 — Prompt Injection: instruction override attempts → BLOCK
-  - Layer 5 — Scope Compliance: medical/financial/legal advice → BLOCK
-- **Conditions:** Immediately blocks on PII, credentials, injection, or scope violations. Flags grounding issues for Verifier review. When uncertain, returns UNCERTAIN with recommendation for human review — never assumes safe.
+- **Function:** Screens every agent output before release.
+- **Input:** Any agent output.
+- **Output:** Layer-by-layer status and final verdict.
+- **Layers:**  
+  - PII scan  
+  - Credential scan  
+  - Grounding compliance  
+  - Prompt injection detection  
+  - Scope compliance
+- **Conditions:** Blocks PII, credentials, injection, and scope violations. Flags grounding issues for Verifier. Returns `UNCERTAIN` when safety is unclear.
 
 ---
 
 ### 8. Verifier Agent — Quality Gate & REVISE Loop
 
-- **Function:** Final quality validation before response release. Checks citation coverage against adaptive thresholds, reasoning completeness, internal consistency, and assumption count. When verification fails, triggers automatic re-invocation of the originating agent with correction guidance (REVISE loop).
-- **Required input:** Agent output + agent type (for threshold selection).
-- **Desired output:** Verdict (APPROVED / REVISE / ESCALATE) with layer scores.
-- **Adaptive thresholds:**
-  - Assessment Agent: ≥90% citation coverage
-  - Study Plan / Curator: ≥85%
-  - Manager Insights: ≥80%
-  - Engagement: ≥70%
-- **Layers:**
-  - Layer 1 — Citation Coverage: below threshold → REVISE
-  - Layer 2 — Reasoning Completeness: missing required fields → REVISE
-  - Layer 3 — Internal Consistency: mismatched IDs or rules → REVISE
-  - Layer 4 — Assumption Audit: >3 ASSUMPTION FLAGs → ESCALATE to human
-- **Conditions:** REVISE triggers one automatic retry with correction guidance. If still fails after retry, output is released with a quality warning. ESCALATE requires human review — system will not auto-release.
+- **Function:** Validates output quality before release and triggers one retry when needed.
+- **Input:** Agent output, agent type.
+- **Output:** `APPROVED`, `REVISE`, or `ESCALATE`, with layer scores.
+- **Checks:** Citation coverage, completeness, internal consistency, assumption count.
+- **Adaptive thresholds:**  
+  - Assessment: **≥90%**  
+  - Study Plan / Curator: **≥85%**  
+  - Manager Insights: **≥80%**  
+  - Engagement: **≥70%**
+- **Conditions:** `REVISE` triggers one retry. `ESCALATE` requires human review.
 
 ---
 
@@ -279,7 +290,7 @@ Agents use this to: schedule safe study windows, detect overload risk, adapt eng
 
 ---
 
-## 🔬 Reasoning Techniques (10 Implemented)
+## 🔬 Anti-Hallucinating Reasoning Techniques
 
 | Technique | Research | Where Applied |
 |---|---|---|
@@ -302,11 +313,9 @@ Agents use this to: schedule safe study windows, detect overload risk, adapt eng
 
 ### Live Demo (Streamlit Cloud)
 
-Try it now — no setup required:
+Fabric 365: — no setup required:
 
 **[https://reasoning-agents-challenge-cccgguvd3had4mdkdbxrnw.streamlit.app/](https://reasoning-agents-challenge-cccgguvd3had4mdkdbxrnw.streamlit.app/)**
-
-Features: multi-chat, agent badges, live pipeline status, reasoning trace expander, response timing.
 
 ### Local Setup
 
@@ -392,7 +401,7 @@ Covers: correct routing, grounded output, privacy protection, prompt injection r
 
 ---
 
-## 🏗️ Deployment (Production-Ready)
+## 🏗️ Production Ready Deployment
 
 The system runs in two modes:
 
@@ -410,25 +419,25 @@ Deployment artifacts included: `Dockerfile`, `azure.yaml`, `agent.manifest.yaml`
 
 ---
 
-## 🌍 Why This Approach
+## 🌍 Why This Approach?
 
-Fabric 365 doesn't just answer — it reasons, validates, and proves its work.
+Fabric 365 doesn’t just answer — it reasons, validates, and explains its work.
 
 Every output is:
-- **Grounded** — cited to a source file or live API result
-- **Reasoned** — visible STEP 1→4 chain showing how the conclusion was reached
-- **Validated** — passed through safety (Policy Guard) and quality (Verifier) gates
-- **Auditable** — full JSON trail saved for every pipeline run
-- **Adaptive** — revises conclusions when new information contradicts prior assumptions
+- **Grounded** — backed by cited source files or live Microsoft APIs
+- **Reasoned** — chain-of-thought visible from STEP 1→4, with intent-aware routing and confidence thresholds
+- **Refined** — uses analogical and abductive reasoning plus nonmonotonic revision when new signals arrive
+- **Validated** — checked through safety (Policy Guard) and adaptive quality thresholds (Verifier)
+- **Auditable** — full JSON trace saved for every pipeline run
 
-Structured reasoning with safety rails, human oversight, and traceable decisions.
+Structured reasoning with safety rails, human oversight, and traceable, Microsoft-aligned decisions.
 
 ---
 
-## 👥 Team
+## 👥 Duo
 
-- KYAW MIN THU
-
+- KYAW MIN THU, XIAOEN TOH
+-REPUBLIC POLYTECHNIC, SINGAPORE
 ---
 
 ## 📄 License
